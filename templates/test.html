@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DotTalk WS Test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#0f1724; color:#e6edf3; margin:0; padding:20px; }
+    .card { background:#0b1220; border:1px solid #172033; border-radius:10px; padding:16px; max-width:900px; margin:12px auto; box-shadow: 0 6px 18px rgba(2,6,23,0.6); }
+    h1 { margin:0 0 8px 0; font-size:20px; }
+    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    input[type="text"], input[type="url"] { background:#08121b; border:1px solid #1e2b38; color:#d8e6f2; padding:8px 10px; border-radius:6px; flex:1; }
+    button { background:#1f8feb; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    button.ghost { background:transparent; border:1px solid #2e3f50; color:#9fb6d0; }
+    #log { height:300px; overflow:auto; background:#02121a; border:1px solid #11202a; padding:10px; border-radius:6px; color:#9fd6ff; font-family: monospace; white-space:pre-wrap; }
+    #msgInput { width:100%; }
+    .status { font-size:13px; color:#9fb6d0; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#0c2b18; color:#7fe08c; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>DotTalk — WebSocket Tester</h1>
+    <div class="row">
+      <label class="status">WS URL</label>
+      <input id="wsUrl" type="url" value="ws://127.0.0.1:8000/ws/chat/test/" />
+      <button id="connectBtn">Connect</button>
+      <button id="disconnectBtn" class="ghost" disabled>Disconnect</button>
+    </div>
+
+    <div class="row">
+      <label class="status">Thread ID</label>
+      <input id="threadId" type="text" value="test" />
+      <button id="changeThread" class="ghost">Switch Thread</button>
+      <div style="margin-left:auto">
+        Status: <span id="connStatus" class="badge">disconnected</span>
+      </div>
+    </div>
+
+    <div class="row">
+      <input id="msgInput" type="text" placeholder='Type a message, e.g. {"message":"hi"} or plain text' />
+      <button id="sendBtn" disabled>Send</button>
+    </div>
+
+    <div id="log"></div>
+
+    <div style="margin-top:12px; font-size:13px; color:#9fb6d0">
+      Tip: Server must be running ASGI (Django Channels). Use <code>ws://</code> locally or <code>wss://</code> in prod with TLS.
+    </div>
+  </div>
+
+  <script>
+    let ws = null;
+    const logEl = document.getElementById('log');
+    const urlInput = document.getElementById('wsUrl');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const msgInput = document.getElementById('msgInput');
+    const connStatus = document.getElementById('connStatus');
+    const threadInput = document.getElementById('threadId');
+    const changeThreadBtn = document.getElementById('changeThread');
+
+    function appendLog(...parts) {
+      const time = new Date().toLocaleTimeString();
+      logEl.textContent += `[${time}] ` + parts.join(' ') + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(...parts);
+    }
+
+    function setStatus(s, color) {
+      connStatus.textContent = s;
+      connStatus.style.background = color || '#0c2b18';
+    }
+
+    function buildUrl(baseUrl, thread) {
+      // If user provided a full URL including path, replace last segment 'test' with thread
+      try {
+        const u = new URL(baseUrl);
+        // Ensure path ends with a slash then thread
+        u.pathname = u.pathname.replace(/\/+$/,'') + '/' + encodeURIComponent(thread) + '/';
+        return u.toString();
+      } catch (e) {
+        return baseUrl;
+      }
+    }
+
+    function connect() {
+      const raw = urlInput.value.trim();
+      const thread = threadInput.value.trim() || 'test';
+      const target = buildUrl(raw, thread);
+
+      appendLog('Connecting to', target);
+      try {
+        ws = new WebSocket(target);
+
+        ws.onopen = () => {
+          appendLog('OPEN — connection established');
+          setStatus('connected','#0f5132');
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          sendBtn.disabled = false;
+        };
+
+        ws.onmessage = (e) => {
+          appendLog('RECEIVE:', e.data);
+        };
+
+        ws.onclose = (ev) => {
+          appendLog('CLOSED — code:', ev.code, 'reason:', ev.reason || '(none)');
+          setStatus('disconnected','#6b0f0f');
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+          sendBtn.disabled = true;
+          ws = null;
+        };
+
+        ws.onerror = (err) => {
+          appendLog('ERROR:', err && err.message ? err.message : JSON.stringify(err));
+        };
+      } catch (err) {
+        appendLog('Failed to create WebSocket:', err.message || err);
+      }
+    }
+
+    function disconnect() {
+      if (!ws) return;
+      appendLog('Closing connection...');
+      ws.close(1000, 'Client closed');
+    }
+
+    function sendMessage() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        appendLog('Cannot send — socket not open');
+        return;
+      }
+      const raw = msgInput.value.trim();
+      let payload = raw;
+      // try to parse as JSON; if not JSON, send as {"message": raw}
+      try {
+        JSON.parse(raw);
+        payload = raw;
+      } catch {
+        payload = JSON.stringify({ message: raw });
+      }
+      appendLog('SEND:', payload);
+      ws.send(payload);
+      msgInput.value = '';
+    }
+
+    connectBtn.addEventListener('click', connect);
+    disconnectBtn.addEventListener('click', disconnect);
+    sendBtn.addEventListener('click', sendMessage);
+    msgInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+    changeThreadBtn.addEventListener('click', () => {
+      if (ws) {
+        appendLog('Switch thread requested — disconnect first then press Connect (or Disconnect to close).');
+      } else {
+        // update URL path live using base url (if it contains 'test' we replace it, else append)
+        const base = urlInput.value.trim();
+        const t = threadInput.value.trim() || 'test';
+        urlInput.value = buildUrl(base, t);
+        appendLog('Thread set to', t);
+      }
+    });
+
+    // quick auto-connect for convenience (optional)
+    // connect();
+  </script>
+</body>
+</html>

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,12 +21,46 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3)2j2cu6=&h2p$nlq#4q%zsw#7%)hkz_arbv9$%xcqt!uy#$n*'
-
+SECRET_KEY = config("SECRET_KEY")
+# SECRET_KEY = 'django-insecure-at+z71p&8n4sf$r_5=ux5jb=ha2!h7^pp&2s470qb8&4+3^-ig'
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+DATE_INPUT_FORMATS = ('%d-%m-%Y', '%Y-%m-%d')
+
+ACTIVATE_JWT = True
+DRFSO2_URL_NAMESPACE = "drf"
+
+ALLOW_UNICODE_SLUGS = True
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+DOMAIN = 'dottalk.ir/'
+SITE_NAME = 'DotTalk'
+SITE_URL = "https://www.dottalk.ir/"
+
+SITE_ID = 1
+
+META_SITE_PROTOCOL = "https"
+META_USE_OG_PROPERTIES = True
+META_USE_TWITTER_PROPERTIES = True
+META_USE_SCHEMAORG_PROPERTIES = True
+
+CSRF_TRUSTED_ORIGINS = ["https://dottalk.ir", "https://www.dottalk.ir"]
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520  # 20 MB
+
+
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'dottalk.ir',
+    'www.dottalk.ir',
+]
 
 # Application definition
 

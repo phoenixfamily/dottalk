@@ -75,15 +75,15 @@
 <body>
 
   <div class="register-card">
-    <div class="logo">● DotTalk</div>
+    <div class="logo">● تاک</div>
     <h5 class="mb-4">ساخت حساب جدید</h5>
     <form method="post">
       {% csrf_token %}
       <div class="mb-3">
-        <input type="text" class="form-control" placeholder="نام کامل" required>
+        <input type="text" class="form-control" placeholder="نام نام خانوادگی" required>
       </div>
       <div class="mb-3">
-        <input type="email" class="form-control" placeholder="ایمیل" required>
+        <input type="tel" class="form-control" placeholder="شماره تلفن" required>
       </div>
       <div class="mb-3">
         <input type="password" class="form-control" placeholder="رمز عبور" required>
@@ -91,7 +91,7 @@
       <div class="mb-3">
         <input type="password" class="form-control" placeholder="تکرار رمز عبور" required>
       </div>
-      <button type="submit" class="btn btn-main">ثبت‌نام</button>
+      <button type="submit" class="btn btn-main">ثبت ‌نام</button>
     </form>
     <div class="mt-4">
       <a href="{% url 'user:login' %}" class="alt-link">قبلاً حساب داری؟ وارد شو</a>

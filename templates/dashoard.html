@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>DotTalk - Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #0e0e0e;
+            font-family: sans-serif;
+            color: #fff;
+            direction: rtl;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 80px 320px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            border-left: 1px solid #222;
+        }
+
+        .brand img {
+            width: 40px;
+            margin-bottom: 1.5rem;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu li {
+            margin: 20px 0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .menu li:hover {
+            color: #fff;
+        }
+
+        /* Chat List */
+        .chat-list {
+            background-color: #141414;
+            border-left: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 1rem;
+            border-bottom: 1px solid #222;
+        }
+
+        .header h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .header input {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #1a1a1a;
+            border: none;
+            color: #fff;
+            border-radius: 6px;
+        }
+
+        .chats {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            border-bottom: 1px solid #222;
+            cursor: pointer;
+        }
+
+        .chat-item:hover, .chat-item.active {
+            background-color: #1f1f1f;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #333;
+            margin-left: 1rem;
+        }
+
+        .chat-info {
+            flex: 1;
+        }
+
+        .chat-info h4 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .chat-info p {
+            margin: 0;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
+        .time {
+            font-size: 0.8rem;
+            color: #777;
+        }
+
+        /* Chat Window */
+        .chat-window {
+            display: flex;
+            flex-direction: column;
+            background-color: #0e0e0e;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            margin-left: 1rem;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin: 0.5rem 0;
+            max-width: 60%;
+            padding: 0.7rem 1rem;
+            border-radius: 15px;
+        }
+
+        .message.received {
+            background-color: #1f1f1f;
+            align-self: flex-start;
+        }
+
+        .message.sent {
+            background-color: #333;
+            align-self: flex-end;
+        }
+
+        .message-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #222;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 0.8rem;
+            background-color: #1a1a1a;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .message-input button {
+            background-color: #fff;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            margin-right: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+        }
+
+        .message-input button:hover {
+            background-color: #ddd;
+        }
+
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand">
+            <img src="{% static 'images/logo.png' %}" alt="DotTalk Logo">
+        </div>
+        <ul class="menu">
+            <li><i class="icon">💬</i></li>
+            <li><i class="icon">👥</i></li>
+            <li><i class="icon">⚙️</i></li>
+            <li><i class="icon">🚪</i></li>
+        </ul>
+    </div>
+
+    <!-- Chat List -->
+    <div class="chat-list">
+        <div class="header">
+            <h2>گفتگوها</h2>
+            <input type="text" placeholder="جستجو...">
+        </div>
+        <div class="chats">
+            <div class="chat-item active">
+                <div class="avatar"></div>
+                <div class="chat-info">
+                    <h4>DotBot</h4>
+                    <p>به DotTalk خوش اومدی 👋</p>
+                </div>
+                <span class="time">اکنون</span>
+            </div>
+            <div class="chat-item">
+                <div class="avatar"></div>
+                <div class="chat-info">
+                    <h4>Support</h4>
+                    <p>در چه زمینه‌ای می‌تونیم کمکت کنیم؟</p>
+                </div>
+                <span class="time">۱ ساعت پیش</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="user-info">
+                <div class="avatar"></div>
+                <h3>DotBot</h3>
+            </div>
+        </div>
+        <div class="messages">
+            <div class="message received">
+                <p>سلام! به دات تاک خوش اومدی 👋</p>
+            </div>
+            <div class="message sent">
+                <p>مرسی! 😎</p>
+            </div>
+        </div>
+        <div class="message-input">
+            <input type="text" placeholder="پیامت رو بنویس...">
+            <button>ارسال</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

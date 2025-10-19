@@ -56,3 +56,8 @@ def logout_view(request):
     logout(request)
     messages.info(request, "با موفقیت خارج شدی 👋")
     return redirect("login")
+
+
+
+def dashboard_view(request):
+    return render(request, 'dashboard.html')

@@ -3,159 +3,185 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DotTalk</title>
+  <title>DotTalk | دات‌تاک</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap');
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Vazirmatn", sans-serif;
-    }
-
     body {
-      background: radial-gradient(circle at 30% 20%, #0a0a0a 0%, #000 100%);
-      color: #fff;
+      background-color: #0d0d0d;
+      color: #f5f5f5;
+      font-family: "IRANSans", sans-serif;
       overflow-x: hidden;
-      min-height: 100vh;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 3rem;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      padding: 20px 60px;
+      background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(10px);
-      background: rgba(20, 20, 20, 0.5);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      position: fixed;
+      width: 100%;
+      top: 0;
       z-index: 1000;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 1.6rem;
       font-weight: 700;
-      font-size: 1.2rem;
-      letter-spacing: 1px;
+      color: white;
     }
 
-    .logo span {
-      color: #4fffca;
-    }
-
-    .actions {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .actions a {
+    .cta-buttons a {
+      color: white;
+      margin-left: 20px;
       text-decoration: none;
-      padding: 0.6rem 1.3rem;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      font-weight: 500;
-      transition: all 0.3s;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 20px;
+      border-radius: 25px;
+      transition: all 0.3s ease;
     }
 
-    .actions a:hover {
-      background: #4fffca;
-      color: #000;
-      border-color: #4fffca;
+    .cta-buttons a:hover {
+      background: white;
+      color: black;
     }
 
     .hero {
-      height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      height: 100vh;
       text-align: center;
-      padding: 0 2rem;
-      position: relative;
+      padding-top: 80px;
     }
 
     .hero h1 {
-      font-size: 3rem;
+      font-size: 3.5rem;
       font-weight: 800;
-      background: linear-gradient(90deg, #4fffca, #00c8ff, #ffffff);
+      background: linear-gradient(90deg, #fff, #999);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-      animation: glow 4s infinite alternate;
+      animation: fadeIn 1.2s ease forwards;
     }
 
     .hero p {
-      font-size: 1.1rem;
+      font-size: 1.3rem;
+      margin-top: 20px;
       max-width: 600px;
-      color: rgba(255,255,255,0.8);
-      line-height: 1.8;
-      margin-bottom: 2rem;
+      color: #ccc;
+      animation: fadeIn 1.6s ease forwards;
     }
 
-    .hero a {
-      text-decoration: none;
-      background: linear-gradient(90deg, #4fffca, #00c8ff);
-      color: #000;
-      padding: 0.8rem 2rem;
-      border-radius: 50px;
+    .hero .btn-main {
+      margin-top: 40px;
+      background: white;
+      color: black;
+      border-radius: 25px;
+      padding: 10px 40px;
       font-weight: 600;
-      transition: transform 0.3s;
+      transition: 0.3s;
     }
 
-    .hero a:hover {
-      transform: scale(1.08);
+    .hero .btn-main:hover {
+      background: #999;
     }
 
-    @keyframes glow {
-      from {
-        text-shadow: 0 0 10px #00c8ff, 0 0 20px #00c8ff, 0 0 30px #00c8ff;
-      }
-      to {
-        text-shadow: 0 0 15px #4fffca, 0 0 25px #4fffca, 0 0 40px #4fffca;
-      }
+    section {
+      padding: 100px 60px;
     }
 
-    /* Floating shapes for futuristic vibe */
-    .shape {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.2;
-      filter: blur(100px);
-      z-index: 0;
-      animation: float 12s ease-in-out infinite alternate;
+    .section-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 60px;
+      color: white;
     }
 
-    .shape1 { width: 300px; height: 300px; background: #00c8ff; top: 10%; left: 20%; }
-    .shape2 { width: 400px; height: 400px; background: #4fffca; bottom: 10%; right: 15%; }
+    .feature {
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      transition: 0.4s;
+    }
 
-    @keyframes float {
-      from { transform: translateY(0); }
-      to { transform: translateY(-40px); }
+    .feature:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-5px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 50px 20px;
+      background: rgba(255,255,255,0.03);
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">● <span>DotTalk</span></div>
-    <div class="actions">
-      <a href="#">ورود</a>
-      <a href="#">عضویت</a>
-    </div>
-  </header>
 
-  <main class="hero">
-    <div class="shape shape1"></div>
-    <div class="shape shape2"></div>
-    <h1>به آینده‌ی گفتگو خوش اومدی</h1>
-    <p>DotTalk نسل جدید ارتباط هوشمند بین انسان‌ها و ماشین‌هاست؛ جایی که هر پیام، یه تجربه‌ی واقعی از تعامل دیجیتال میشه.</p>
-    <a href="#">شروع گفتگو</a>
-  </main>
+<header>
+  <div class="logo">● DotTalk</div>
+  <div class="cta-buttons">
+    <a href="#">ورود</a>
+    <a href="#">ثبت‌نام</a>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>ارتباط دوباره اختراع شده</h1>
+  <p>DotTalk نسل جدید پیام‌رسان و ایمیل است. جایی که گفتگوها هوشمند، سریع و خصوصی هستند — بدون هرج‌ومرج، بدون تبلیغ، بدون هرزنامه.</p>
+  <a href="#" class="btn btn-main">دریافت دعوت‌نامه</a>
+</section>
+
+<section id="values">
+  <h2 class="section-title">چرا DotTalk؟</h2>
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature">
+          <h4>هوشمند و ساده</h4>
+          <p>با هوش مصنوعی داخلی، پیام‌ها و مکالمات شما طبقه‌بندی و خلاصه می‌شوند تا همیشه در جریان باشید.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature">
+          <h4>امنیت و حریم خصوصی</h4>
+          <p>اطلاعات شما رمزگذاری‌شده‌اند. هیچ تبلیغی، هیچ ردگیری‌ای — فقط ارتباط امن و شفاف.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature">
+          <h4>یکپارچگی واقعی</h4>
+          <p>ایمیل، چت، فایل‌ها و تماس‌ها در یک فضا — یک تجربه‌ی روان، بدون سوئیچ بین اپ‌ها.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="compare">
+  <h2 class="section-title">فرق DotTalk با Gmail چیه؟</h2>
+  <div class="container text-center">
+    <p>Gmail برای گذشته ساخته شده بود — پر از تبلیغات، فیلترها و اسپم.
+    اما DotTalk برای نسل جدید طراحی شده: سرعت بالا، امنیت واقعی و طراحی مینیمال.
+    این فقط ایمیل نیست، این یه ارتباط هوشمنده.</p>
+  </div>
+</section>
+
+<footer>
+  <p>© 2025 DotTalk. همه حقوق محفوظ است.</p>
+</footer>
+
 </body>
 </html>

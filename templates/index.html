@@ -1,617 +1,161 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DotTalk — ایمیل مثل چت</title>
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-  <!-- AOS (scroll animations) -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DotTalk</title>
   <style>
-    :root{
-      --brand:#10281a;
-      --accent:#1f8feb;
-      --muted:#9fb6d0;
-      --bg:#f6fbf8;
-    }
-    html,body{height:100%;}
-    body{
-      font-family:"Vazirmatn",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-      background:var(--bg);
-      color:#0b2130;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      scroll-behavior:smooth;
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Vazirmatn", sans-serif;
     }
 
-    /* Header */
-    .navbar {
-      transition: background .25s ease, backdrop-filter .25s ease, box-shadow .25s ease;
-      background:transparent;
-    }
-    .navbar.sticky {
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(6px);
-      box-shadow: 0 6px 20px rgba(16,40,26,0.06);
+    body {
+      background: radial-gradient(circle at 30% 20%, #0a0a0a 0%, #000 100%);
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
     }
 
-    /* Hero */
-    .hero {
-      padding: 80px 0;
-    }
-    .hero-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
-      border-radius:14px;
-      padding:22px;
-      box-shadow: 0 10px 40px rgba(2,6,23,0.06);
-    }
-
-    /* Features */
-    .feature-card { border-radius:12px; padding:20px; background:white; transition:transform .18s ease, box-shadow .18s ease;}
-    .feature-card:hover{ transform:translateY(-6px); box-shadow:0 16px 40px rgba(16,40,26,0.06); }
-
-    /* How it works */
-    .step {
-      background: linear-gradient(90deg, rgba(16,40,26,0.02), rgba(255,255,255,0));
-      border-radius:12px; padding:18px;
-    }
-
-    /* Blog cards */
-    .blog-card { border-radius:12px; overflow:hidden; background:white; box-shadow:0 8px 30px rgba(2,6,23,0.04); }
-
-    /* Footer */
-    footer { padding:40px 0; color:#073; }
-
-    /* Contact */
-    .toast {
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 3rem;
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 24px;
-      z-index: 9999;
+      top: 0;
+      left: 0;
+      right: 0;
+      backdrop-filter: blur(10px);
+      background: rgba(20, 20, 20, 0.5);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      z-index: 1000;
     }
 
-    /* Responsive tweaks */
-    @media (max-width: 767px){
-      .hero { padding:40px 0; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+    }
+
+    .logo span {
+      color: #4fffca;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .actions a {
+      text-decoration: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .actions a:hover {
+      background: #4fffca;
+      color: #000;
+      border-color: #4fffca;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 2rem;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #4fffca, #00c8ff, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      animation: glow 4s infinite alternate;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      max-width: 600px;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+
+    .hero a {
+      text-decoration: none;
+      background: linear-gradient(90deg, #4fffca, #00c8ff);
+      color: #000;
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: transform 0.3s;
+    }
+
+    .hero a:hover {
+      transform: scale(1.08);
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 10px #00c8ff, 0 0 20px #00c8ff, 0 0 30px #00c8ff;
+      }
+      to {
+        text-shadow: 0 0 15px #4fffca, 0 0 25px #4fffca, 0 0 40px #4fffca;
+      }
+    }
+
+    /* Floating shapes for futuristic vibe */
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.2;
+      filter: blur(100px);
+      z-index: 0;
+      animation: float 12s ease-in-out infinite alternate;
+    }
+
+    .shape1 { width: 300px; height: 300px; background: #00c8ff; top: 10%; left: 20%; }
+    .shape2 { width: 400px; height: 400px; background: #4fffca; bottom: 10%; right: 15%; }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-40px); }
     }
   </style>
 </head>
 <body>
-
-  <!-- NAVBAR -->
-  <nav id="mainNav" class="navbar navbar-expand-lg py-3">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-        <div style="width:44px;height:44px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:700">•</div>
-        <div>
-          <div style="font-weight:700">DotTalk</div>
-          <small style="color:var(--muted);font-weight:600">ایمیل · چت · فدرِیت</small>
-        </div>
-      </a>
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navCollapse">
-        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-          <li class="nav-item"><a class="nav-link" href="#home">خانه</a></li>
-          <li class="nav-item"><a class="nav-link" href="#features">امکانات</a></li>
-          <li class="nav-item"><a class="nav-link" href="#how">چطور کار می‌کند</a></li>
-          <li class="nav-item"><a class="nav-link" href="#about">درباره</a></li>
-          <li class="nav-item"><a class="nav-link" href="#blog">بلاگ</a></li>
-          <li class="nav-item"><a class="nav-link" href="#contact">تماس</a></li>
-          <li class="nav-item ms-2">
-            <a class="btn btn-outline-primary" id="waitlistBtn" href="#contact">عضویت زودهنگام</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO -->
-  <header id="home" class="hero">
-    <div class="container">
-      <div class="row align-items-center gy-4">
-        <div class="col-lg-6" data-aos="fade-right">
-          <h1 style="font-size:2.1rem;line-height:1.08;margin-bottom:14px;">
-            ایمیل رو مثل <span style="color:var(--brand);font-weight:800">چت</span> تجربه کن
-          </h1>
-          <p class="text-muted mb-4" style="font-size:1.02rem">
-            DotTalk پلی بین ایمیل‌های رسمی و مکالمات بلادرنگ — امن، فدرِیت و ساده برای کار تیمی و فردی.
-          </p>
-
-          <div class="d-flex gap-2 flex-wrap">
-            <a class="btn btn-lg btn-primary me-2" href="#how">مشاهده دمو</a>
-            <a class="btn btn-lg btn-outline-dark" href="#contact">عضویت در بتا</a>
-          </div>
-
-          <ul class="list-unstyled mt-4" style="color:var(--muted);font-weight:600">
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>فدرِیت بین دامنه‌ها</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>ادغام با هر سرور ایمیل استاندارد</li>
-            <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>امنیت و رمزنگاری قابل توسعه</li>
-          </ul>
-        </div>
-
-        <div class="col-lg-6" data-aos="fade-left">
-          <div class="hero-card">
-            <!-- Lottie animation -->
-            <div id="lottie" style="height:320px;"></div>
-            <div class="mt-3 d-flex gap-2">
-              <div class="flex-grow-1">
-                <div class="small text-muted">نمونه چت — زنده</div>
-                <div class="h6">علی: آیا گزارش امروز رو فرستادی؟</div>
-              </div>
-              <div style="min-width:110px">
-                <button class="btn btn-sm btn-outline-primary w-100" id="openWsDemo">آزمایش WebSocket</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <header>
+    <div class="logo">● <span>DotTalk</span></div>
+    <div class="actions">
+      <a href="#">ورود</a>
+      <a href="#">عضویت</a>
     </div>
   </header>
 
-  <!-- FEATURES -->
-  <section id="features" class="py-5">
-    <div class="container">
-      <div class="text-center mb-5" data-aos="fade-up">
-        <h3 style="font-weight:700">قابلیت‌های کلیدی</h3>
-        <p class="text-muted">چیزایی که DotTalk رو متفاوت می‌کنه</p>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="50">
-          <div class="feature-card p-4">
-            <div class="d-flex align-items-start gap-3">
-              <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,var(--brand),#183c25);display:flex;align-items:center;justify-content:center;color:white;font-size:20px">
-                <i class="bi bi-lightning-fill"></i>
-              </div>
-              <div>
-                <h5 style="margin:0">Real-Time Messaging</h5>
-                <p class="text-muted mb-0">پیام‌ها در لحظه نشان داده می‌شن حتی وقتی با ایمیل ارسال شده باشن.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="120">
-          <div class="feature-card p-4">
-            <div class="d-flex align-items-start gap-3">
-              <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,#0f2b2a,#11463a);display:flex;align-items:center;justify-content:center;color:white;font-size:20px">
-                <i class="bi bi-envelope-fill"></i>
-              </div>
-              <div>
-                <h5 style="margin:0">Smart Threading</h5>
-                <p class="text-muted mb-0">ایمیل‌ها خودکار گروه‌بندی شده و به شکل مکالمه نمایش داده می‌شن.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="feature-card p-4">
-            <div class="d-flex align-items-start gap-3">
-              <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(180deg,#1a2a24,#09331d);display:flex;align-items:center;justify-content:center;color:white;font-size:20px">
-                <i class="bi bi-shield-lock-fill"></i>
-              </div>
-              <div>
-                <h5 style="margin:0">Privacy First</h5>
-                <p class="text-muted mb-0">کنترل کلیدها و دامنه با خودت؛ تصمیم‌گیری در مورد رمزگذاری و ذخیره‌سازی با توست.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how" class="py-5 bg-white">
-    <div class="container">
-      <div class="text-center mb-5" data-aos="fade-up">
-        <h3 style="font-weight:700">چطور کار می‌کند</h3>
-        <p class="text-muted">سه مرحله ساده برای شروع</p>
-      </div>
-
-      <div class="row g-4 align-items-center">
-        <div class="col-lg-6" data-aos="fade-right">
-          <div class="step p-4">
-            <div class="d-flex align-items-start gap-3">
-              <div style="font-size:28px;width:64px;height:64px;border-radius:12px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white">1</div>
-              <div>
-                <h5>اتصال دامنه</h5>
-                <p class="text-muted">دامنهٔ خودت را متصل کن — DNS، DKIM و SPF را راهنمایی می‌کنیم.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="step p-4 mt-3">
-            <div class="d-flex align-items-start gap-3">
-              <div style="font-size:28px;width:64px;height:64px;border-radius:12px;background:#1f8feb;display:flex;align-items:center;justify-content:center;color:white">2</div>
-              <div>
-                <h5>همگام‌سازی ایمیل</h5>
-                <p class="text-muted">ایمیل‌های جدید توسط سرویس ما شنود شده و به مکالمه تبدیل می‌شوند.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="step p-4 mt-3">
-            <div class="d-flex align-items-start gap-3">
-              <div style="font-size:28px;width:64px;height:64px;border-radius:12px;background:#17a673;display:flex;align-items:center;justify-content:center;color:white">3</div>
-              <div>
-                <h5>چت بلادرنگ</h5>
-                <p class="text-muted">کاربران در دامنه‌های مختلف می‌توانند مثل مسنجر با هم گفتگو کنند.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-6" data-aos="fade-left">
-          <div class="blog-card p-3">
-            <div class="p-3">
-              <h5>دموی تعاملی</h5>
-              <p class="text-muted">می‌تونی مستقیم WebSocket رو تست کنی یا درون این دمو پیام ارسال کنی.</p>
-              <div class="mt-3">
-                <button class="btn btn-primary me-2" id="openDemoModal">نمایش دمو</button>
-                <button class="btn btn-outline-secondary" id="openWsDemo2">آزمایش WebSocket</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ABOUT -->
-  <section id="about" class="py-5">
-    <div class="container">
-      <div class="row align-items-center gy-4">
-        <div class="col-md-6" data-aos="fade-right">
-          <h4>درباره DotTalk</h4>
-          <p class="text-muted">DotTalk پروژه‌ای متن‌باز برای تلفیق قابلیت‌های ایمیل سنتی با تجربهٔ مدرن چت است. ما می‌خواهیم ارتباطات حرفه‌ای ساده‌تر، قابل‌اطمینان‌تر و انسانی‌تر شود.</p>
-          <p class="text-muted">این سامانه بر پایهٔ استانداردهای ایمیل و پروتکل‌های فدرِیت توسعه می‌یابد و تمرکز اصلی روی سادگی و سازگاری با هر زیرساخت ایمیلی‌ست.</p>
-          <div class="mt-3">
-            <a class="btn btn-outline-dark" href="#" target="_blank"><i class="bi bi-github"></i> گیت‌هاب</a>
-          </div>
-        </div>
-
-        <div class="col-md-6" data-aos="fade-left">
-          <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=7b1bb9b0c1f5e1c6f3f9b8a1c6a1f4c8" alt="about" class="img-fluid rounded" style="box-shadow:0 12px 40px rgba(2,6,23,0.06)">
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- BLOG PREVIEW -->
-  <section id="blog" class="py-5 bg-white">
-    <div class="container">
-      <div class="text-center mb-5" data-aos="fade-up">
-        <h3 style="font-weight:700">بلاگ و مقالات</h3>
-        <p class="text-muted">آخرین نوشته‌ها دربارهٔ ایمیل، فدرِیشن و خودکارسازی</p>
-      </div>
-
-      <div class="row g-4">
-        <!-- Example blog items (replace with server-rendered items) -->
-        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="50">
-          <div class="blog-card p-3">
-            <img src="https://images.unsplash.com/photo-1526378722819-8d7b0b3a1fdd?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=1a2b3c4d5e6f7g8h" class="img-fluid" alt="">
-            <div class="p-3">
-              <h6 style="margin:0">چرا ایمیل هنوز مهم است</h6>
-              <p class="text-muted small">نگاهی به دوام ایمیل و کاربردهای مدرن آن در سازمان‌ها</p>
-              <a href="#" class="stretched-link" data-bs-toggle="modal" data-bs-target="#blogModal" data-title="چرا ایمیل هنوز مهم است" data-body="متن نمونه مقاله...">ادامه</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="120">
-          <div class="blog-card p-3">
-            <img src="https://images.unsplash.com/photo-152571...q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=zzz" class="img-fluid" alt="">
-            <div class="p-3">
-              <h6 style="margin:0">فدرِیشن: آیندهٔ ارتباطات</h6>
-              <p class="text-muted small">مبانی federation و مزایای آن برای سرویس‌های مستقل</p>
-              <a href="#" class="stretched-link" data-bs-toggle="modal" data-bs-target="#blogModal" data-title="فدرِیشن: آیندهٔ ارتباطات" data-body="متن نمونه...">ادامه</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
-          <div class="blog-card p-3">
-            <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=aaa" class="img-fluid" alt="">
-            <div class="p-3">
-              <h6 style="margin:0">اتومات‌سازی با Email→Chat</h6>
-              <p class="text-muted small">چطور ایمیل‌ها رو به گردش‌کار هوشمند تبدیل کنیم</p>
-              <a href="#" class="stretched-link" data-bs-toggle="modal" data-bs-target="#blogModal" data-title="اتومات‌سازی با Email→Chat" data-body="متن نمونه...">ادامه</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section id="contact" class="py-5">
-    <div class="container">
-      <div class="text-center mb-5" data-aos="fade-up">
-        <h3 style="font-weight:700">با ما در تماس باشید</h3>
-        <p class="text-muted">اگر می‌خواهید جزء کاربران اولیه باشید یا همکاری کنید، پیامتان را ارسال کنید.</p>
-      </div>
-
-      <div class="row justify-content-center">
-        <div class="col-lg-8" data-aos="fade-up" data-aos-delay="50">
-          <div class="hero-card p-4">
-            <form id="contactForm">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label">نام</label>
-                  <input type="text" class="form-control" id="name" required>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">ایمیل</label>
-                  <input type="email" class="form-control" id="email" required>
-                </div>
-                <div class="col-12">
-                  <label class="form-label">پیام</label>
-                  <textarea class="form-control" id="message" rows="4" required></textarea>
-                </div>
-
-                <div class="col-12 d-flex justify-content-end">
-                  <button class="btn btn-primary" type="submit">ارسال پیام</button>
-                </div>
-              </div>
-            </form>
-
-            <div class="mt-3 text-muted small">
-              یا با ایمیل <strong>info@dottalk.io</strong> تماس بگیرید.
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-dark text-light">
-    <div class="container py-4">
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <div class="d-flex align-items-center gap-3">
-            <div style="width:44px;height:44px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;font-weight:700">•</div>
-            <div>
-              <div style="font-weight:700">DotTalk</div>
-              <small style="color:#9fb6d0">Email-first messaging · 2025</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 text-md-start text-center mt-3 mt-md-0">
-          <small>© 2025 DotTalk. All rights reserved.</small>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Blog Modal -->
-  <div class="modal fade" id="blogModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content" dir="rtl">
-        <div class="modal-header">
-          <h5 class="modal-title" id="blogModalLabel">عنوان</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
-        </div>
-        <div class="modal-body" id="blogModalBody">محتوا...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Demo Modal -->
-  <div class="modal fade" id="demoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-      <div class="modal-content" dir="rtl">
-        <div class="modal-header">
-          <h5 class="modal-title">دموی تعاملی DotTalk</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
-        </div>
-        <div class="modal-body">
-          <p class="text-muted">در این دمو می‌توانید WebSocket را با سرور محلی خودتان تست کنید (برای توسعه).</p>
-          <div class="row">
-            <div class="col-md-6">
-              <label class="form-label">آدرس WebSocket</label>
-              <input id="demoWsUrl" class="form-control" value="ws://127.0.0.1:8000/ws/chat/test/">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Thread ID</label>
-              <input id="demoThread" class="form-control" value="test">
-            </div>
-          </div>
-
-          <div class="mt-3">
-            <div id="demoLog" style="height:240px; overflow:auto; background:#02121a; color:#9fd6ff; padding:12px; border-radius:8px; font-family:monospace;"></div>
-            <div class="d-flex gap-2 mt-3">
-              <input id="demoMsg" class="form-control" placeholder='{"message":"سلام"}'>
-              <button class="btn btn-primary" id="demoConnect">Connect</button>
-              <button class="btn btn-outline-secondary" id="demoSend" disabled>Send</button>
-              <button class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div class="toast align-items-center text-bg-success border-0" id="successToast" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body">درخواست شما با موفقیت ارسال شد.</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="بستن"></button>
-    </div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
-
-  <script>
-    // Init libs
-    AOS.init({ once:true, duration:700, offset:50 });
-
-    // Navbar sticky + active link on scroll
-    const nav = document.getElementById('mainNav');
-    const links = document.querySelectorAll('.nav-link');
-    function onScroll(){
-      if(window.scrollY > 30) nav.classList.add('sticky'); else nav.classList.remove('sticky');
-
-      document.querySelectorAll('section[id]').forEach(sec=>{
-        const rect = sec.getBoundingClientRect();
-        const id = sec.id;
-        const link = document.querySelector('.nav-link[href="#'+id+'"]');
-        if(!link) return;
-        if(rect.top <= 120 && rect.bottom >= 120){
-          links.forEach(l=>l.classList.remove('active'));
-          link.classList.add('active');
-        }
-      });
-    }
-    window.addEventListener('scroll', onScroll);
-    onScroll();
-
-    // Lottie animation for hero (you can replace the URL)
-    const lottieContainer = document.getElementById('lottie');
-    lottie.loadAnimation({
-      container: lottieContainer,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'https://assets7.lottiefiles.com/packages/lf20_6qf8c7jg.json' // sample chat animation
-    });
-
-    // Smooth scroll for nav links
-    document.querySelectorAll('.nav-link').forEach(a=>{
-      a.addEventListener('click', (e)=>{
-        const href = a.getAttribute('href');
-        if(href && href.startsWith('#')){
-          e.preventDefault();
-          document.querySelector(href).scrollIntoView({behavior:'smooth', block:'start'});
-        }
-      });
-    });
-
-    // Blog modal dynamic fill
-    const blogModal = document.getElementById('blogModal');
-    blogModal.addEventListener('show.bs.modal', (ev)=>{
-      const trigger = ev.relatedTarget;
-      const title = trigger.getAttribute('data-title');
-      const body = trigger.getAttribute('data-body');
-      document.getElementById('blogModalLabel').textContent = title;
-      document.getElementById('blogModalBody').textContent = body;
-    });
-
-    // Contact form (AJAX). Integrate endpoint: POST /api/contact/  (example)
-    const contactForm = document.getElementById('contactForm');
-    contactForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const data = {
-        name: document.getElementById('name').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        message: document.getElementById('message').value.trim()
-      };
-      // Basic validation
-      if(!data.name || !data.email || !data.message) return alert('لطفا همه فیلدها را پر کنید.');
-
-      try {
-        // Example: send to backend route /api/contact/ (adjust to your Django view)
-        const resp = await fetch('/api/contact/', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify(data)
-        });
-        if(resp.ok){
-          const toastEl = document.getElementById('successToast');
-          const bsToast = new bootstrap.Toast(toastEl);
-          bsToast.show();
-          contactForm.reset();
-        } else {
-          const text = await resp.text();
-          alert('خطا در ارسال: ' + text);
-        }
-      } catch(err){
-        console.error(err);
-        alert('مشکل در اتصال به سرور. بعداً تلاش کنید.');
-      }
-    });
-
-    // Demo modal WebSocket test
-    let demoWs = null;
-    const demoLog = document.getElementById('demoLog');
-    function demoAppend(...parts){
-      const t = new Date().toLocaleTimeString();
-      demoLog.innerText += `[${t}] ` + parts.join(' ') + '\n';
-      demoLog.scrollTop = demoLog.scrollHeight;
-    }
-
-    document.getElementById('openDemoModal').addEventListener('click', ()=>{
-      new bootstrap.Modal(document.getElementById('demoModal')).show();
-    });
-
-    document.getElementById('demoConnect').addEventListener('click', ()=>{
-      const base = document.getElementById('demoWsUrl').value.trim();
-      const thread = document.getElementById('demoThread').value.trim() || 'test';
-
-      // build url (ensure single thread in path)
-      let url = base.replace(/\/+$/, '') + '/' ; // ensure trailing slash
-      if(!url.match(/\/ws\/chat\/[^\/]+\/$/)) {
-        // try to construct standard path
-        url = 'ws://127.0.0.1:8000/ws/chat/' + encodeURIComponent(thread) + '/';
-      }
-      demoAppend('Connecting to ' + url);
-      try {
-        demoWs = new WebSocket(url);
-      } catch(e){
-        demoAppend('ERROR creating WebSocket: ' + e.message);
-        return;
-      }
-      demoWs.onopen = ()=>{ demoAppend('OPEN — connection established'); document.getElementById('demoSend').disabled = false; };
-      demoWs.onmessage = (ev)=>{ demoAppend('RECEIVE: ' + ev.data); };
-      demoWs.onclose = ()=>{ demoAppend('CLOSED'); document.getElementById('demoSend').disabled = true; demoWs=null; };
-      demoWs.onerror = (err)=>{ demoAppend('ERROR: ' + JSON.stringify(err)); };
-    });
-
-    document.getElementById('demoSend').addEventListener('click', ()=>{
-      if(!demoWs || demoWs.readyState !== WebSocket.OPEN) return demoAppend('Socket not open');
-      const raw = document.getElementById('demoMsg').value.trim();
-      let payload = raw;
-      try { JSON.parse(raw); } catch { payload = JSON.stringify({ message: raw }); }
-      demoAppend('SEND: ' + payload);
-      demoWs.send(payload);
-      document.getElementById('demoMsg').value = '';
-    });
-
-    // small UI niceties (open websocket demo from hero)
-    document.getElementById('openWsDemo').addEventListener('click', ()=>{
-      const modal = new bootstrap.Modal(document.getElementById('demoModal'));
-      modal.show();
-      setTimeout(()=>document.getElementById('demoConnect').click(), 500);
-    });
-    document.getElementById('openWsDemo2').addEventListener('click', ()=> document.getElementById('openWsDemo').click());
-
-    // small entrance animation using GSAP
-    gsap.from(".feature-card", { y:20, opacity:0, stagger:0.08, duration:0.8 });
-  </script>
+  <main class="hero">
+    <div class="shape shape1"></div>
+    <div class="shape shape2"></div>
+    <h1>به آینده‌ی گفتگو خوش اومدی</h1>
+    <p>DotTalk نسل جدید ارتباط هوشمند بین انسان‌ها و ماشین‌هاست؛ جایی که هر پیام، یه تجربه‌ی واقعی از تعامل دیجیتال میشه.</p>
+    <a href="#">شروع گفتگو</a>
+  </main>
 </body>
 </html>

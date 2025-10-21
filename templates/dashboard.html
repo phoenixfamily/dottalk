@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>DotTalk - Dashboard</title>
-
     <script src="https://kit.fontawesome.com/1228ed801f.js" crossorigin="anonymous"></script>
-
-
     <style>
         body {
             margin: 0;
             background-color: #0e0e0e;
-            font-family: sans-serif;
+            font-family: "Vazirmatn", sans-serif;
             color: #fff;
             direction: rtl;
         }
@@ -20,6 +17,7 @@
             display: grid;
             grid-template-columns: 80px 320px 1fr;
             height: 100vh;
+            transition: grid-template-columns 0.3s ease;
         }
 
         /* Sidebar */
@@ -30,48 +28,78 @@
             align-items: center;
             padding: 1rem 0;
             border-left: 1px solid #222;
+            position: relative;
         }
 
-        .brand img {
-            width: 40px;
+        .brand .logo {
+            font-size: 1.8rem;
             margin-bottom: 1.5rem;
+            cursor: pointer;
         }
 
         .menu {
             list-style: none;
             padding: 0;
+            width: 100%;
         }
 
         .menu li {
             margin: 20px 0;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             cursor: pointer;
             color: #aaa;
             text-align: center;
             padding: 10px;
             border-radius: 10px;
             transition: 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .menu li span {
-            font-size: 0.9rem;
-            margin-top: 5px;
-            color: #aaa;
         }
 
         .menu li:hover {
-            color:#fff; /* تغییر رنگ متن روی هاور */
-            background: rgba(255, 255, 255, 0.2); /* بکگراند شیشه‌ای سفید */
-            backdrop-filter: blur(10px); /* افکت شیشه‌ای */
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
 
-        .menu li:hover span {
+        /* Sub Sidebar (secondary menu) */
+        .sub-sidebar {
+            position: absolute;
+            top: 0;
+            right: -220px;
+            width: 220px;
+            height: 100%;
+            background: #141414;
+            border-left: 1px solid #222;
+            display: none;
+            flex-direction: column;
+            padding: 1rem;
+            transition: right 0.3s ease;
+        }
+
+        .sub-sidebar.active {
+            display: flex;
+            right: 80px;
+        }
+
+        .sub-sidebar h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+
+        .sub-sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sub-sidebar li {
+            padding: 0.7rem 0;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .sub-sidebar li:hover {
             color: #fff;
         }
-
 
         /* Chat List */
         .chat-list {
@@ -84,11 +112,6 @@
         .header {
             padding: 1rem;
             border-bottom: 1px solid #222;
-        }
-
-        .header h2 {
-            margin: 0 0 0.5rem;
-            font-size: 1.2rem;
         }
 
         .header input {
@@ -125,10 +148,6 @@
             margin-left: 1rem;
         }
 
-        .chat-info {
-            flex: 1;
-        }
-
         .chat-info h4 {
             margin: 0;
             font-size: 1rem;
@@ -138,11 +157,6 @@
             margin: 0;
             color: #aaa;
             font-size: 0.85rem;
-        }
-
-        .time {
-            font-size: 0.8rem;
-            color: #777;
         }
 
         /* Chat Window */
@@ -157,28 +171,15 @@
             border-bottom: 1px solid #222;
             display: flex;
             align-items: center;
-        }
-
-        .icon {
-            color: #141414 !important;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-info .avatar {
-            width: 40px;
-            height: 40px;
-            background-color: #333;
-            margin-left: 1rem;
+            justify-content: space-between;
         }
 
         .messages {
             flex: 1;
             padding: 1rem;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .message {
@@ -227,12 +228,6 @@
             background-color: #ddd;
         }
 
-        .logo {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: white;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -240,79 +235,107 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="brand">
-            <div class="logo"><i class="fa-solid fa-bars"></i></div>
+            <div class="logo" id="menuToggle"><i class="fa-solid fa-bars"></i></div>
         </div>
         <ul class="menu">
-            <li>
-                <i class="fa-solid fa-comments"></i>
-                <span>صندوقچه</span>
-            </li>
-            <li>
-                <i class="fa-regular fa-inbox"></i>
-                <span>دریافتی ها</span>
-            </li>
-            <li>
-                <i class="fa-regular fa-paper-plane"></i>
-                <span>ارسالی ها</span>
-            </li>
-            <li>
-                <i class="fa-regular fa-circle-exclamation"></i>
-                <span>ناشناخته</span>
-            </li>
-            <li>
-                <i class="fa-regular fa-bookmark"></i>
-                <span>ذخیره ها</span>
-            </li>
+            <li><i class="fa-solid fa-comments"></i></li>
+            <li><i class="fa-regular fa-inbox"></i></li>
+            <li><i class="fa-regular fa-paper-plane"></i></li>
+            <li><i class="fa-regular fa-bookmark"></i></li>
         </ul>
-    </div>
 
+        <!-- Secondary Sidebar -->
+        <div class="sub-sidebar" id="subMenu">
+            <h3>منو</h3>
+            <ul>
+                <li>تنظیمات</li>
+                <li>پروفایل</li>
+                <li>ربات‌ها</li>
+                <li>امنیت</li>
+                <li>خروج</li>
+            </ul>
+        </div>
+    </div>
 
     <!-- Chat List -->
     <div class="chat-list">
         <div class="header">
             <input type="text" placeholder="جستجو...">
         </div>
-        <div class="chats">
-            <div class="chat-item active">
-                <div class="avatar"></div>
-                <div class="chat-info">
-                    <h4>DotBot</h4>
-                    <p>به DotTalk خوش اومدی 👋</p>
-                </div>
-                <span class="time">اکنون</span>
-            </div>
-            <div class="chat-item">
-                <div class="avatar"></div>
-                <div class="chat-info">
-                    <h4>Support</h4>
-                    <p>در چه زمینه‌ای می‌تونیم کمکت کنیم؟</p>
-                </div>
-                <span class="time">۱ ساعت پیش</span>
-            </div>
+        <div class="chats" id="chatList">
+            <!-- پیام‌ها با fetch از بک می‌آیند -->
         </div>
     </div>
 
     <!-- Chat Window -->
     <div class="chat-window">
         <div class="chat-header">
-            <div class="user-info">
-                <div class="avatar"></div>
-                <h3>DotBot</h3>
-            </div>
+            <h3 id="chatTitle">DotBot</h3>
         </div>
-        <div class="messages">
-            <div class="message received">
-                <p>سلام! به دات تاک خوش اومدی 👋</p>
-            </div>
-            <div class="message sent">
-                <p>مرسی! 😎</p>
-            </div>
-        </div>
+        <div class="messages" id="messages"></div>
         <div class="message-input">
-            <input type="text" placeholder="پیامت رو بنویس...">
-            <button>ارسال</button>
+            <input type="text" id="messageInput" placeholder="پیامت رو بنویس...">
+            <button id="sendBtn">ارسال</button>
         </div>
     </div>
 </div>
+
+<script>
+    // باز و بسته کردن منوی دوم
+    const menuToggle = document.getElementById("menuToggle");
+    const subMenu = document.getElementById("subMenu");
+    menuToggle.addEventListener("click", () => {
+        subMenu.classList.toggle("active");
+    });
+
+    // شبیه‌سازی fetch به بک
+    async function loadChats() {
+        const res = await fetch("/api/chats/");
+        const chats = await res.json();
+        const list = document.getElementById("chatList");
+        list.innerHTML = "";
+        chats.forEach(chat => {
+            const item = document.createElement("div");
+            item.classList.add("chat-item");
+            item.innerHTML = `
+                <div class="avatar"></div>
+                <div class="chat-info">
+                    <h4>${chat.user}</h4>
+                    <p>${chat.last_message}</p>
+                </div>
+                <span class="time">${chat.time}</span>`;
+            item.onclick = () => loadMessages(chat.id);
+            list.appendChild(item);
+        });
+    }
+
+    async function loadMessages(chatId) {
+        const res = await fetch(`/api/chats/${chatId}/messages/`);
+        const msgs = await res.json();
+        const msgBox = document.getElementById("messages");
+        msgBox.innerHTML = "";
+        msgs.forEach(msg => {
+            const div = document.createElement("div");
+            div.classList.add("message", msg.sent ? "sent" : "received");
+            div.innerHTML = `<p>${msg.text}</p>`;
+            msgBox.appendChild(div);
+        });
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+        const input = document.getElementById("messageInput");
+        const text = input.value.trim();
+        if (!text) return;
+        await fetch("/api/send/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({text})
+        });
+        input.value = "";
+        loadMessages(1);
+    });
+
+    loadChats();
+</script>
 </body>
 </html>

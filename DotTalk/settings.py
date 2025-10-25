@@ -99,6 +99,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+AUTH_USER_MODEL = 'User.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

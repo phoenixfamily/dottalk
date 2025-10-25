@@ -133,8 +133,8 @@
 <header>
   <div class="logo">● تاک</div>
   <div class="cta-buttons">
-    <a id="loginBtn" href="">ورود</a>
-    <a id="registerBtn" href="">ثبت‌نام</a>
+    <div id="loginBtn" href="">ورود</div>
+    <div id="registerBtn" href="">ثبت ‌نام</div>
   </div>
 </header>
 
@@ -259,7 +259,6 @@ function arrayBufferToBase64(buffer) {
 
 <script>
 const registerBtn = document.getElementById("registerBtn");
-const status = document.getElementById("status");
 
 registerBtn.addEventListener("click", async () => {
     status.textContent = "در حال ایجاد challenge... ⏳";

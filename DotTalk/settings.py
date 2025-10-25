@@ -13,8 +13,6 @@ import os
 from pathlib import Path
 from decouple import config
 
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +24,6 @@ SECRET_KEY = config("SECRET_KEY")
 # SECRET_KEY = 'django-insecure-at+z71p&8n4sf$r_5=ux5jb=ha2!h7^pp&2s470qb8&4+3^-ig'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
-
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
@@ -59,7 +56,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520  # 20 MB
 WEBAUTHN_RP_NAME = "DotTalk"
 WEBAUTHN_RP_ID = "dottalk.ir"  # یا localhost در تست
 WEBAUTHN_ORIGIN = "https://dottalk.ir"  # در محیط dev: http://localhost:8000
-
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -141,6 +137,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'options': '-c search_path=public'
+        }
     }
 }
 # Password validation

@@ -14,6 +14,7 @@ from pathlib import Path
 from decouple import config
 
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -54,6 +55,11 @@ CSRF_TRUSTED_ORIGINS = ["https://dottalk.ir", "https://www.dottalk.ir"]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520  # 20 MB
 
+# آدرس دامنه پلتفرم (برای origin و RP ID)
+WEBAUTHN_RP_NAME = "DotTalk"
+WEBAUTHN_RP_ID = "dottalk.ir"  # یا localhost در تست
+WEBAUTHN_ORIGIN = "https://dottalk.ir"  # در محیط dev: http://localhost:8000
+
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -71,6 +77,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'channels',
     'user',
     'tasks',

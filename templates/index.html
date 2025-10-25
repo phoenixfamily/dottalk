@@ -133,8 +133,8 @@
 <header>
   <div class="logo">● تاک</div>
   <div class="cta-buttons">
-    <a href="{% url 'user:login' %}">ورود</a>
-    <a href="{% url 'user:register' %}">ثبت‌نام</a>
+    <a id="loginBtn" href="">ورود</a>
+    <a id="registerBtn" href="">ثبت‌نام</a>
   </div>
 </header>
 
@@ -177,11 +177,145 @@
     اما DotTalk برای نسل جدید طراحی شده: سرعت بالا، امنیت واقعی و طراحی مینیمال.
     این فقط ایمیل نیست، این یه ارتباط هوشمنده.</p>
   </div>
+  <div id="status" class="mt-3"></div>
 </section>
 
 <footer>
   <p>© 2025 DotTalk. همه حقوق محفوظ است.</p>
 </footer>
+
+
+
+<script>
+const loginBtn = document.getElementById("loginBtn");
+const status = document.getElementById("status");
+
+loginBtn.addEventListener("click", async () => {
+    const username = document.getElementById("username").value;
+    if (!username) { status.textContent = "Username لازم است 😐"; return; }
+
+    status.textContent = "در حال دریافت challenge... ⏳";
+
+    // مرحله 1: درخواست challenge
+    const optsResp = await fetch("{% url 'user:login-option' %}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username})
+    });
+    const opts = await optsResp.json();
+
+    opts.challenge = Uint8Array.from(atob(opts.challenge), c => c.charCodeAt(0));
+    opts.allowCredentials = opts.allowCredentials.map(c => ({
+        ...c,
+        id: Uint8Array.from(atob(c.id), ch => ch.charCodeAt(0)),
+    }));
+
+    // مرحله 2: WebAuthn API
+    let assertion;
+    try {
+        assertion = await navigator.credentials.get({ publicKey: opts });
+    } catch (err) {
+        status.textContent = "خطا در ورود: " + err;
+        return;
+    }
+
+    const authData = {
+        id: assertion.id,
+        rawId: arrayBufferToBase64(assertion.rawId),
+        type: assertion.type,
+        response: {
+            clientDataJSON: arrayBufferToBase64(assertion.response.clientDataJSON),
+            authenticatorData: arrayBufferToBase64(assertion.response.authenticatorData),
+            signature: arrayBufferToBase64(assertion.response.signature),
+            userHandle: assertion.response.userHandle ? arrayBufferToBase64(assertion.response.userHandle) : null
+        }
+    };
+
+    // مرحله 3: ارسال به سرور
+    const verifyResp = await fetch("{% url 'user:login-verify' %}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({...authData, username})
+    });
+    const result = await verifyResp.json();
+
+    if (result.status === "authenticated") {
+        status.textContent = "ورود موفق ✅ Username: " + result.user;
+        // می‌تونی JWT رو اینجا ذخیره کنی
+    } else {
+        status.textContent = "ورود ناموفق ❌";
+    }
+});
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary);
+}
+</script>
+</body>
+</html>
+
+<script>
+const registerBtn = document.getElementById("registerBtn");
+const status = document.getElementById("status");
+
+registerBtn.addEventListener("click", async () => {
+    status.textContent = "در حال ایجاد challenge... ⏳";
+
+    // مرحله 1: دریافت challenge
+    const optsResp = await fetch("{% url 'user:register-option' %}", { method: "POST" });
+    const opts = await optsResp.json();
+
+    // مرحله 2: تبدیل challenge به ArrayBuffer
+    opts.user.id = Uint8Array.from(atob(opts.user.id), c => c.charCodeAt(0));
+    opts.challenge = Uint8Array.from(atob(opts.challenge), c => c.charCodeAt(0));
+
+    // مراحل WebAuthn API
+    let credential;
+    try {
+        credential = await navigator.credentials.create({ publicKey: opts });
+    } catch (err) {
+        status.textContent = "خطا در ایجاد credential: " + err;
+        return;
+    }
+
+    // مرحله 3: آماده کردن داده برای سرور
+    const credData = {
+        user_id: opts.user.name, // یا opts.user.id/base64 string
+        id: credential.id,
+        rawId: arrayBufferToBase64(credential.rawId),
+        type: credential.type,
+        response: {
+            clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+            attestationObject: arrayBufferToBase64(credential.response.attestationObject)
+        }
+    };
+
+    // مرحله 4: ارسال به سرور
+    const verifyResp = await fetch("{% url 'user:register-verify' %}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(credData)
+    });
+
+    const result = await verifyResp.json();
+    if (result.status === "ok") {
+        status.textContent = "ثبت نام موفق ✅ Username: " + result.user;
+    } else {
+        status.textContent = "ثبت نام ناموفق ❌";
+    }
+});
+
+// توابع کمکی
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary);
+}
+</script>
 
 </body>
 </html>

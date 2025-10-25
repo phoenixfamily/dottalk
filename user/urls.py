@@ -5,9 +5,11 @@ from .views import dashboard_view
 app_name = "user"
 
 urlpatterns = [
-    path('login/', views.login_view, name='login'),
-    path('register/', views.register_view, name='register'),
-    path('logout/', views.logout_view, name='logout'),
+    path("api/register/options/", views.webauthn_register_options, name='register-option'),
+    path("api/register/verify/", views.webauthn_register_verify, name='register-verify'),
+    path("api/login/options/", views.webauthn_login_options, name='login-option'),
+    path("api/login/verify/", views.webauthn_login_verify, name='login-verify'),
+
     path('dashboard/', dashboard_view, name='dashboard'),
 
 ]

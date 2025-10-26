@@ -26,15 +26,11 @@ class CustomAccountManager(BaseUserManager):
             username = generate_short_username()
             while self.model.objects.filter(username=username).exists():
                 username = generate_short_username()
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
         return self._create_user(username, **extra_fields)
 
     def create_superuser(self, username=None, **extra_fields):
         if username is None:
             username = "admin"
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
         return self._create_user(username, **extra_fields)
 

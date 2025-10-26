@@ -1,4 +1,5 @@
 import json
+from dataclasses import asdict
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -22,9 +23,7 @@ def webauthn_register_options(request):
     user = request.user if request.user.is_authenticated else User.objects.create_user()
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
-    return Response(opts.json())
-
-
+    return Response(json.dumps(asdict(opts)))
 
 
 @api_view(["POST"])

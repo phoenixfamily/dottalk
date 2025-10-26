@@ -22,7 +22,8 @@ def webauthn_register_options(request):
     user = request.user if request.user.is_authenticated else User.objects.create_user()
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
-    return Response(opts.model_dump_json())
+    return Response(opts.json())
+
 
 
 

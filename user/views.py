@@ -1,4 +1,5 @@
 import json
+import base64
 from dataclasses import asdict
 from django.shortcuts import render
 from django.contrib.auth.models import User
@@ -16,14 +17,30 @@ from .webauthn_utils import (
     verify_authentication_response_data,
 )
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_register_options(request):
-    # برای کاربر جدید، یوزر خودکار بساز
     user = request.user if request.user.is_authenticated else User.objects.create_user()
+
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
-    return Response(json.dumps(asdict(opts)))
+
+    opts_dict = asdict(opts)
+
+    # تبدیل تمام bytes به base64 string برای سازگاری با JSON
+    def encode_bytes(obj):
+        if isinstance(obj, (bytes, bytearray)):
+            return base64.urlsafe_b64encode(obj).rstrip(b"=").decode("utf-8")
+        elif isinstance(obj, list):
+            return [encode_bytes(i) for i in obj]
+        elif isinstance(obj, dict):
+            return {k: encode_bytes(v) for k, v in obj.items()}
+        return obj
+
+    opts_json_ready = encode_bytes(opts_dict)
+
+    return Response(opts_json_ready)
 
 
 @api_view(["POST"])

@@ -410,11 +410,20 @@
                 return;
             }
 
-             // تبدیل نام فیلدها به WebAuthn استاندارد
+            // تبدیل نام فیلدها به WebAuthn استاندارد
             if (opts.pub_key_cred_params) {
                 opts.pubKeyCredParams = opts.pub_key_cred_params;
                 delete opts.pub_key_cred_params;
             }
+
+            if (opts.user.display_name) {
+                opts.user.displayName = opts.user.display_name;
+                delete opts.user.display_name;
+            } else if (!opts.user.displayName) {
+                // fallback اجباری برای WebAuthn
+                opts.user.displayName = opts.user.name;
+            }
+
 
             // 2️⃣ تبدیل فیلدهای base64 به Uint8Array
             if (typeof opts.challenge === "string") {
@@ -431,7 +440,6 @@
             }
 
             console.log("✅ WebAuthn-ready opts:", opts);
-
 
 
             function removeNullFields(obj) {

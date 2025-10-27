@@ -1,6 +1,8 @@
 import json
 import base64
 import secrets
+from dataclasses import asdict
+
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -30,7 +32,7 @@ def webauthn_register_options(request):
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
 
-    opts_dict = opts.model_dump()
+    opts_dict = asdict(opts)
 
     # تبدیل تمام bytes به base64 string برای سازگاری با JSON
     def encode_bytes(obj):

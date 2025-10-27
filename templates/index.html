@@ -347,100 +347,110 @@
 
 
 <script>
-    const registerBtn = document.getElementById("registerBtn");
-    const captchaBox = document.getElementById("captchaBox");
-    const captchaQuestion = document.getElementById("captchaQuestion");
-    const captchaConfirmBtn = document.getElementById("captchaConfirmBtn");
-    const captchaCancelBtn = document.getElementById("captchaCancelBtn");
+const registerBtn = document.getElementById("registerBtn");
+const captchaBox = document.getElementById("captchaBox");
+const captchaQuestion = document.getElementById("captchaQuestion");
+const captchaConfirmBtn = document.getElementById("captchaConfirmBtn");
+const captchaCancelBtn = document.getElementById("captchaCancelBtn");
 
-    // // URL-safe Base64 encode/decode
-    // function arrayBufferToBase64Url(buffer) {
-    //     let binary = '';
-    //     const bytes = new Uint8Array(buffer);
-    //     for (let b of bytes) binary += String.fromCharCode(b);
-    //     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    // }
-    //
-    // function base64UrlToUint8Array(base64UrlString) {
-    //     let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/');
-    //     const padding = '='.repeat((4 - base64.length % 4) % 4);
-    //     base64 += padding;
-    //     const raw = atob(base64);
-    //     const array = new Uint8Array(raw.length);
-    //     for (let i = 0; i < raw.length; i++) array[i] = raw.charCodeAt(i);
-    //     return array;
-    // }
+// --- Base64URL helpers ---
+function arrayBufferToBase64Url(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 
+function base64UrlToUint8Array(base64UrlString) {
+    let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - base64.length % 4) % 4);
+    base64 += padding;
+    const raw = atob(base64);
+    const array = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) array[i] = raw.charCodeAt(i);
+    return array;
+}
 
-    async function loadCaptcha() {
-        const resp = await fetch("{% url 'user:custom-captcha' %}");
-        const data = await resp.json();
-        captchaQuestion.textContent = data.question;
-    }
+// --- Captcha ---
+async function loadCaptcha() {
+    const resp = await fetch("{% url 'user:custom-captcha' %}");
+    const data = await resp.json();
+    captchaQuestion.textContent = data.question;
+}
 
+// --- Button events ---
+registerBtn.addEventListener("click", async () => {
+    await loadCaptcha();
+    captchaBox.classList.remove("hidden");
+});
 
-    registerBtn.addEventListener("click", async () => {
-        await loadCaptcha();
-        captchaBox.classList.remove("hidden");
-    });
+captchaCancelBtn.addEventListener("click", () => {
+    captchaBox.classList.add("hidden");
+});
 
-    captchaCancelBtn.addEventListener("click", () => {
-        captchaBox.classList.add("hidden");
-    });
+captchaConfirmBtn.addEventListener("click", async () => {
+    const captchaValue = document.getElementById("captchaInput").value.trim();
+    captchaBox.classList.add("hidden");
+    status.textContent = "در حال ایجاد challenge... ⏳";
 
-
-    captchaConfirmBtn.addEventListener("click", async () => {
-        const captchaValue = document.getElementById("captchaInput").value;
-        captchaBox.classList.add("hidden");
-        status.textContent = "در حال ایجاد challenge... ⏳";
-
-
+    try {
+        // 1️⃣ دریافت challenge از سرور
         const optsResp = await fetch("{% url 'user:register-option' %}", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({captcha: captchaValue})
         });
 
+        console.log("📨 Response status:", optsResp.status);
         const opts = await optsResp.json();
-        if (opts.error) {
-            status.textContent = "خطا: " + opts.error;
+        console.log("📦 Response JSON:", opts);
+
+        if (!optsResp.ok) {
+            status.textContent = "خطا در سرور: " + (opts.error || opts.detail || "نامشخص");
             return;
         }
 
-        console.log("📨 Response status:", optsResp.status);
-        console.log("📦 Response JSON:", opts);
-
-
-
+        // 2️⃣ تبدیل فیلدهای base64 به Uint8Array
+        if (typeof opts.challenge === "string") {
+            opts.challenge = base64UrlToUint8Array(opts.challenge);
+        }
+        if (typeof opts.user.id === "string") {
+            opts.user.id = base64UrlToUint8Array(opts.user.id);
+        }
         if (opts.allowCredentials) {
             opts.allowCredentials = opts.allowCredentials.map(c => ({
                 ...c,
-                id: c.id
+                id: typeof c.id === "string" ? base64UrlToUint8Array(c.id) : c.id
             }));
         }
 
-        // مرحله 3: WebAuthn API
+        console.log("✅ WebAuthn-ready opts:", opts);
+
+        // 3️⃣ اجرای WebAuthn
         let credential;
         try {
-            credential = await navigator.credentials.create({publicKey: opts});
+            credential = await navigator.credentials.create({ publicKey: opts });
         } catch (err) {
-            status.textContent = "خطا در ایجاد credential: " + err;
+            console.error("❌ WebAuthn error:", err);
+            status.textContent = "خطا در ایجاد credential: " + err.message;
             return;
         }
 
-        // مرحله 4: آماده کردن داده برای سرور
+        console.log("✅ Credential created:", credential);
+
+        // 4️⃣ آماده‌سازی داده برای ارسال
         const credData = {
             user_id: opts.user.name,
             id: credential.id,
-            rawId: credential.rawId,
+            rawId: arrayBufferToBase64Url(credential.rawId),
             type: credential.type,
             response: {
-                clientDataJSON: credential.response.clientDataJSON,
-                attestationObject: credential.response.attestationObject
+                clientDataJSON: arrayBufferToBase64Url(credential.response.clientDataJSON),
+                attestationObject: arrayBufferToBase64Url(credential.response.attestationObject)
             }
         };
 
-        // مرحله 5: ارسال داده‌ها به سرور
+        // 5️⃣ ارسال به سرور برای verify
         const verifyResp = await fetch("{% url 'user:register-verify' %}", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -448,24 +458,26 @@
         });
 
         const result = await verifyResp.json();
+        console.log("🎯 Verify result:", result);
 
         if (result.success) {
-            status.textContent = "ثبت نام موفق ✅";
-
-            // ذخیره اطلاعات مهم در sessionStorage
+            status.textContent = "ثبت‌نام موفق ✅";
             sessionStorage.setItem("auth_token", result.auth_token);
             sessionStorage.setItem("device_info", JSON.stringify(result.device_info));
 
-            // ریدایرکت بعد از چند ثانیه
             setTimeout(() => {
                 window.location.href = "{% url 'user:register-view' %}";
             }, 1500);
-
         } else {
             status.textContent = "ثبت نام ناموفق ❌: " + (result.error || "خطای نامعلوم");
         }
-    });
+    } catch (err) {
+        console.error("💥 Global error:", err);
+        status.textContent = "خطا در ارتباط با سرور";
+    }
+});
 </script>
+
 
 </body>
 </html>

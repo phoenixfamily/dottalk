@@ -6,6 +6,7 @@ from django.conf import settings
 import requests
 import random
 
+from django.contrib.auth import login
 from django_user_agents.utils import get_user_agent
 from django.shortcuts import render
 from django.contrib.auth.models import User
@@ -43,13 +44,16 @@ def custom_captcha(request):
 @permission_classes([AllowAny])
 def webauthn_register_options(request):
 
-    user_answer = request.data.get("captcha")
-    if not verify_captcha(request, user_answer):
+    captcha_response = request.data.get("captcha")
+    if not captcha_response or captcha_response != request.session.get("captcha_answer"):
         return Response({"error": "Captcha not valid"}, status=400)
 
-    user = request.user if request.user.is_authenticated else User.objects.create_user(
-        username=f"dt-{secrets.token_urlsafe(6)}"
-    )
+    # ایجاد یا استفاده از کاربر
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        user = User.objects.create_user(username=f"dt-{secrets.token_urlsafe(6)}")
+        login(request, user)  # ← کاربر وارد session شد
 
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
@@ -101,8 +105,8 @@ def webauthn_register_verify(request):
     ip_address = get_client_ip(request)
 
     """Verify WebAuthn registration"""
-    user = request.user if request.user.is_authenticated else None
-    if not user:
+    user = request.user
+    if not user.is_authenticated:
         return Response({"error": "User not authenticated"}, status=400)
 
     challenge = cache.get(f"register_challenge_{user.id}")

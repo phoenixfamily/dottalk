@@ -48,8 +48,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(default=timezone.now)
 
     # 🔐 توکن شناسایی کلی (برای API و بازیابی)
-    auth_token = models.CharField(max_length=128, unique=True, default=lambda: secrets.token_urlsafe(32))
-
+    auth_token = models.CharField(
+        max_length=128,
+        unique=True,
+        default="temp_token_for_migration"  # فقط برای migration
+    )
     # آخرین لاگین و IP
     last_login_at = models.DateTimeField(null=True, blank=True)
     last_ip = models.GenericIPAddressField(null=True, blank=True)

@@ -48,11 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(default=timezone.now)
 
     # 🔐 توکن شناسایی کلی (برای API و بازیابی)
-    auth_token = models.CharField(
-        max_length=128,
-        unique=True,
-        default="temp_token_for_migration"  # فقط برای migration
-    )
+    auth_token = models.CharField(max_length=128, unique=True ,default=lambda: secrets.token_urlsafe(32))
     # آخرین لاگین و IP
     last_login_at = models.DateTimeField(null=True, blank=True)
     last_ip = models.GenericIPAddressField(null=True, blank=True)
@@ -99,11 +95,7 @@ class UserDeviceInfo(models.Model):
 class DeviceAccessToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="device_tokens")
     device = models.ForeignKey(UserDeviceInfo, on_delete=models.CASCADE, related_name="tokens", null=True, blank=True)
-    token =  models.CharField(
-        max_length=128,
-        unique=True,
-        default="temp_token_for_migration"  # فقط برای migration
-    )
+    token =  models.CharField(max_length=128, unique=True ,default=lambda: secrets.token_urlsafe(32))
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 

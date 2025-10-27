@@ -4,6 +4,7 @@ import secrets
 from dataclasses import asdict
 from django.conf import settings
 import requests
+import random
 
 from django_user_agents.utils import get_user_agent
 from django.shortcuts import render
@@ -27,12 +28,23 @@ from .webauthn_utils import (
 )
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def custom_captcha(request):
+    a, b = random.randint(1, 9), random.randint(1, 9)
+    question = f"{a} + {b} = ?"
+    answer = str(a + b)
+    # ذخیره در session (یا cache)
+    request.session["captcha_answer"] = answer
+    return Response({"question": question})
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_register_options(request):
 
-    captcha_response = request.data.get("captcha")
-    if not verify_captcha(captcha_response):
+    user_answer = request.data.get("captcha")
+    if not verify_captcha(request, user_answer):
         return Response({"error": "Captcha not valid"}, status=400)
 
     user = request.user if request.user.is_authenticated else User.objects.create_user(
@@ -60,17 +72,11 @@ def webauthn_register_options(request):
 
 
 
-def verify_captcha(token: str) -> bool:
-    """بررسی CAPTCHA با Google reCAPTCHA"""
-    if not token:
+def verify_captcha(request, user_answer: str) -> bool:
+    correct = request.session.get("captcha_answer")
+    if not correct:
         return False
-    url = "https://www.google.com/recaptcha/api/siteverify"
-    payload = {
-        "secret": settings.RECAPTCHA_SECRET_KEY,
-        "response": token
-    }
-    resp = requests.post(url, data=payload).json()
-    return resp.get("success", False)
+    return user_answer.strip() == correct
 
 
 def b64decode(data: str) -> bytes:

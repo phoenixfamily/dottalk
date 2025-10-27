@@ -12,6 +12,8 @@ urlpatterns = [
     path('login/', login_view, name='login-view'),
     path('register/', register_view, name='register-view'),
 
+    path('captcha/', custom_captcha, name='custom-captcha'),
+
     path('dashboard/', dashboard_view, name='dashboard-view'),
 
 ]

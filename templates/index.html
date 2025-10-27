@@ -127,6 +127,54 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    .hidden { display: none; }
+
+.captcha-popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+
+.captcha-content {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 300px;
+  animation: fadeIn 0.3s ease;
+}
+
+.captcha-content h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.captcha-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.captcha-actions button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#captchaConfirmBtn { background-color: #007bff; color: white; }
+#captchaCancelBtn { background-color: #ddd; color: #333; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
   </style>
 </head>
 <body>
@@ -138,6 +186,19 @@
     <div id="registerBtn" href="">ثبت ‌نام</div>
   </div>
 </header>
+
+
+<div id="captchaBox" class="captcha-popup hidden">
+  <div class="captcha-content">
+    <h3>تأیید انسان بودن 🤖</h3>
+    <p id="captchaQuestion">در حال بارگذاری...</p>
+    <input id="captchaInput" type="text" placeholder="جواب را وارد کنید" />
+    <div class="captcha-actions">
+      <button id="captchaConfirmBtn">تأیید</button>
+      <button id="captchaCancelBtn">انصراف</button>
+    </div>
+  </div>
+</div>
 
 <section class="hero">
   <h1>ارتباط دوباره اختراع شده</h1>
@@ -259,7 +320,11 @@ function arrayBufferToBase64(buffer) {
 
 <script>
 const registerBtn = document.getElementById("registerBtn");
-
+const captchaBox = document.getElementById("captchaBox");
+const captchaQuestion = document.getElementById("captchaQuestion");
+const captchaConfirmBtn = document.getElementById("captchaConfirmBtn");
+const captchaCancelBtn = document.getElementById("captchaCancelBtn");
+const status = document.getElementById("status");
 // URL-safe Base64 encode/decode
 function arrayBufferToBase64Url(buffer) {
     let binary = '';
@@ -278,15 +343,34 @@ function base64UrlToUint8Array(base64UrlString) {
     return array;
 }
 
+
+async function loadCaptcha() {
+    const resp = await fetch("{% url 'user:custom-captcha' %}");
+    const data = await resp.json();
+    captchaQuestion.textContent = data.question;
+}
+
+
 registerBtn.addEventListener("click", async () => {
+    await loadCaptcha();
+    captchaBox.classList.remove("hidden");
+});
+
+captchaCancelBtn.addEventListener("click", () => {
+    captchaBox.classList.add("hidden");
+});
+
+
+captchaConfirmBtn.addEventListener("click", async () => {
+    const captchaValue = document.getElementById("captchaInput").value;
+    captchaBox.classList.add("hidden");
     status.textContent = "در حال ایجاد challenge... ⏳";
 
-    // مرحله 1: دریافت challenge و ارسال CAPTCHA
-    const captchaToken = document.getElementById("captchaInput")?.value || "";
+
     const optsResp = await fetch("{% url 'user:register-option' %}", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({captcha: captchaToken})
+        body: JSON.stringify({captcha: captchaValue})
     });
 
     const opts = await optsResp.json();

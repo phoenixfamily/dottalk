@@ -19,7 +19,7 @@ def generate_unique_auth_tokens(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('user', 'previous_migration_name'),  # <- اینو با آخرین migration خودت جایگزین کن
+        ('user', '000X_add_auth_token.py'),  # <- اینو با آخرین migration خودت جایگزین کن
     ]
 
     operations = [

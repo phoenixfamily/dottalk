@@ -11,6 +11,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 def generate_short_username():
     return "dt-" + secrets.token_urlsafe(6)
 
+def generate_device_token():
+    return secrets.token_urlsafe(32)
 
 class CustomAccountManager(BaseUserManager):
     use_in_migrations = True
@@ -48,7 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(default=timezone.now)
 
     # 🔐 توکن شناسایی کلی (برای API و بازیابی)
-    auth_token = models.CharField(max_length=128, unique=True ,default=lambda: secrets.token_urlsafe(32))
+    auth_token = models.CharField(max_length=128, unique=True ,default=generate_device_token)
     # آخرین لاگین و IP
     last_login_at = models.DateTimeField(null=True, blank=True)
     last_ip = models.GenericIPAddressField(null=True, blank=True)
@@ -95,7 +97,7 @@ class UserDeviceInfo(models.Model):
 class DeviceAccessToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="device_tokens")
     device = models.ForeignKey(UserDeviceInfo, on_delete=models.CASCADE, related_name="tokens", null=True, blank=True)
-    token =  models.CharField(max_length=128, unique=True ,default=lambda: secrets.token_urlsafe(32))
+    token =  models.CharField(max_length=128, unique=True , default=generate_device_token)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 

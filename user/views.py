@@ -1,13 +1,15 @@
 import json
 import base64
-from dataclasses import asdict
+import secrets
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from webauthn.helpers.structs import RegistrationCredential, AuthenticatorAttestationResponse
 from user.models import User
 from .models import WebAuthnCredential
 from .webauthn_utils import (
@@ -21,12 +23,14 @@ from .webauthn_utils import (
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_register_options(request):
-    user = request.user if request.user.is_authenticated else User.objects.create_user()
+    user = request.user if request.user.is_authenticated else User.objects.create_user(
+        username=f"dt-{secrets.token_urlsafe(6)}"
+    )
 
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
 
-    opts_dict = asdict(opts)
+    opts_dict = opts.model_dump()
 
     # تبدیل تمام bytes به base64 string برای سازگاری با JSON
     def encode_bytes(obj):
@@ -43,25 +47,58 @@ def webauthn_register_options(request):
     return Response(opts_json_ready)
 
 
+def b64decode(data: str) -> bytes:
+    """Decode base64 or base64url safely"""
+    data = data.replace("-", "+").replace("_", "/")
+    padding = "=" * (-len(data) % 4)
+    return base64.b64decode(data + padding)
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_register_verify(request):
-    """اعتبارسنجی پاسخ ثبت credential"""
-    user_id = request.data.get("user_id")
-    data = json.dumps(request.data)
-    user = get_object_or_404(User, id=user_id)
+    """Verify WebAuthn registration"""
+    user = request.user if request.user.is_authenticated else None
+    if not user:
+        return Response({"error": "User not authenticated"}, status=400)
+
     challenge = cache.get(f"register_challenge_{user.id}")
+    if not challenge:
+        return Response({"error": "Challenge expired or not found"}, status=400)
 
-    verification = verify_registration_response_data(user, data, challenge)
+    data = request.data
+    try:
+        # ساخت response درست
+        response = AuthenticatorAttestationResponse(
+            client_data_json=b64decode(data["response"]["clientDataJSON"]),
+            attestation_object=b64decode(data["response"]["attestationObject"]),
+        )
 
-    credential = WebAuthnCredential.objects.create(
-        user=user,
-        credential_id=verification.credential_id,
-        public_key=verification.credential_public_key,
-        sign_count=verification.sign_count,
-    )
-    return Response({"status": "ok", "credential_id": credential.credential_id})
+        # ساخت credential نهایی
+        credential = RegistrationCredential(
+            id=data["id"],
+            raw_id=b64decode(data["rawId"]),
+            response=response,
+            type=data["type"],
+        )
 
+        verification = verify_registration_response_data(
+            user=user,
+            data=data,  # raw JSON داده‌ای که از فرانت میاد
+            expected_challenge=challenge,
+        )
+
+        WebAuthnCredential.objects.create(
+            user=user,
+            credential_id=verification.credential_id,
+            public_key=verification.credential_public_key,
+            sign_count=verification.sign_count,
+        )
+
+        return Response({"success": True})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # ---- ورود با Passkey ----
 

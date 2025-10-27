@@ -410,6 +410,12 @@
                 return;
             }
 
+             // تبدیل نام فیلدها به WebAuthn استاندارد
+            if (opts.pub_key_cred_params) {
+                opts.pubKeyCredParams = opts.pub_key_cred_params;
+                delete opts.pub_key_cred_params;
+            }
+
             // 2️⃣ تبدیل فیلدهای base64 به Uint8Array
             if (typeof opts.challenge === "string") {
                 opts.challenge = base64UrlToUint8Array(opts.challenge);
@@ -425,6 +431,8 @@
             }
 
             console.log("✅ WebAuthn-ready opts:", opts);
+
+
 
             function removeNullFields(obj) {
                 for (const key in obj) {

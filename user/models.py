@@ -77,7 +77,7 @@ class UserDeviceInfo(models.Model):
         ('Unknown', 'Unknown'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='devices')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='devices', null=True, blank=True)
     device_model = models.CharField(max_length=100, blank=True, null=True)
     device_type = models.CharField(max_length=10, choices=DEVICE_TYPES, default='Unknown')
     operating_system = models.CharField(max_length=50, blank=True, null=True)

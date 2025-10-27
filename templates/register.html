@@ -1,102 +1,190 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ثبت‌نام | DotTalk</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ثبت نام موفق - DotTalk</title>
+<style>
+    /* تم کلی */
     body {
-      background-color: #0d0d0d;
-      color: #f5f5f5;
-      font-family: "IRANSans", sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #121212;
+        color: #eee;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
     }
 
-    .register-card {
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 20px;
-      backdrop-filter: blur(15px);
-      padding: 40px;
-      width: 400px;
-      text-align: center;
-      box-shadow: 0 0 20px rgba(255,255,255,0.05);
+    header {
+        padding: 1rem 2rem;
+        background-color: #1f1f1f;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     }
 
-    .logo {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: white;
-      margin-bottom: 20px;
+    header .logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fff;
     }
 
-    input.form-control {
-      background: rgba(255, 255, 255, 0.08);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      padding: 10px;
+    main {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
     }
 
-    input.form-control:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px #ffffff40;
+    .card {
+        background-color: #1e1e1e;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+        max-width: 500px;
+        width: 100%;
     }
 
-    .btn-main {
-      background: white;
-      color: black;
-      font-weight: 600;
-      border-radius: 25px;
-      width: 100%;
-      padding: 10px;
-      margin-top: 15px;
-      transition: 0.3s;
+    .card h1 {
+        margin-top: 0;
+        color: #00bfff;
+        text-align: center;
     }
 
-    .btn-main:hover {
-      background: #999;
+    .card p {
+        margin: 0.5rem 0;
+        line-height: 1.5;
     }
 
-    .alt-link {
-      color: #aaa;
-      text-decoration: none;
-      font-size: 0.9rem;
+    .info {
+        background-color: #2a2a2a;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
     }
 
-    .alt-link:hover {
-      color: white;
+    .info div {
+        margin-bottom: 0.5rem;
     }
-  </style>
+
+    .token-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #000;
+        color: #0ff;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-family: monospace;
+        word-break: break-all;
+    }
+
+    .copy-btn {
+        background-color: #00bfff;
+        border: none;
+        color: #fff;
+        padding: 0.3rem 0.7rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+
+    .copy-btn:hover {
+        background-color: #009acd;
+    }
+
+    .warning {
+        background-color: #330000;
+        color: #ff5555;
+        padding: 0.7rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .dashboard-btn {
+        display: block;
+        width: 100%;
+        margin-top: 1.5rem;
+        background-color: #00bfff;
+        border: none;
+        color: #fff;
+        font-size: 1.1rem;
+        padding: 0.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        text-align: center;
+    }
+
+    .dashboard-btn:hover {
+        background-color: #009acd;
+    }
+
+</style>
 </head>
 <body>
 
-  <div class="register-card">
-    <div class="logo">● تاک</div>
-    <h5 class="mb-4">ساخت حساب جدید</h5>
-    <form method="post">
-      {% csrf_token %}
-      <div class="mb-3">
-        <input type="text" class="form-control" placeholder="نام نام خانوادگی" required>
-      </div>
-      <div class="mb-3">
-        <input type="tel" class="form-control" placeholder="شماره تلفن" required>
-      </div>
-      <div class="mb-3">
-        <input type="password" class="form-control" placeholder="رمز عبور" required>
-      </div>
-      <div class="mb-3">
-        <input type="password" class="form-control" placeholder="تکرار رمز عبور" required>
-      </div>
-      <button type="submit" class="btn btn-main">ثبت ‌نام</button>
-    </form>
-    <div class="mt-4">
-      <a href="{% url 'user:login' %}" class="alt-link">قبلاً حساب داری؟ وارد شو</a>
+<header>
+    <div class="logo">● DotTalk</div>
+</header>
+
+<main>
+    <div class="card">
+        <h1>ثبت نام موفق ✅</h1>
+        <p>اکانت شما با موفقیت ایجاد شد! در ادامه اطلاعات دیوایس و توکن ورود شما نمایش داده می‌شود:</p>
+
+        <div class="info">
+            <div><strong>آی‌پی:</strong> <span id="ipAddress"></span></div>
+            <div><strong>دستگاه:</strong> <span id="deviceModel"></span></div>
+            <div><strong>نوع:</strong> <span id="deviceType"></span></div>
+            <div><strong>مرورگر:</strong> <span id="browser"></span></div>
+            <div><strong>سیستم‌عامل:</strong> <span id="os"></span></div>
+        </div>
+
+        <div class="token-container">
+            <span id="authToken"></span>
+            <button class="copy-btn" onclick="copyToken()">کپی</button>
+        </div>
+
+        <div class="warning">
+            این توکن تنها راه ورود شماست! حتماً در جایی امن ذخیره کنید. اگر گم شود، دسترسی به اکانت از بین می‌رود.
+        </div>
+
+        <button class="dashboard-btn" onclick="goToDashboard()">ورود به پنل کاربری</button>
     </div>
-  </div>
+</main>
+
+<script>
+    // دریافت داده‌ها از sessionStorage (ارسال شده از register API)
+    const deviceInfo = JSON.parse(sessionStorage.getItem("device_info") || "{}");
+    const authToken = sessionStorage.getItem("auth_token") || "----";
+
+    document.getElementById("ipAddress").textContent = deviceInfo.ip_address || "نامشخص";
+    document.getElementById("deviceModel").textContent = deviceInfo.device_model || "نامشخص";
+    document.getElementById("deviceType").textContent = deviceInfo.device_type || "نامشخص";
+    document.getElementById("browser").textContent = deviceInfo.browser || "نامشخص";
+    document.getElementById("os").textContent = deviceInfo.os || "نامشخص";
+    document.getElementById("authToken").textContent = authToken;
+
+    function copyToken() {
+        navigator.clipboard.writeText(authToken).then(() => {
+            alert("توکن کپی شد ✅");
+        }).catch(err => {
+            alert("کپی توکن با مشکل مواجه شد ❌");
+        });
+    }
+
+    function goToDashboard() {
+        window.location.href = "{% url 'user:dashboard-view' %}";
+    }
+</script>
 
 </body>
 </html>

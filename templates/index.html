@@ -260,19 +260,55 @@ function arrayBufferToBase64(buffer) {
 
 <script>
 const registerBtn = document.getElementById("registerBtn");
+const status = document.getElementById("status");
+
+// URL-safe Base64 encode/decode
+function arrayBufferToBase64Url(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlToUint8Array(base64UrlString) {
+    let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - base64.length % 4) % 4);
+    base64 += padding;
+    const raw = atob(base64);
+    const array = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) array[i] = raw.charCodeAt(i);
+    return array;
+}
 
 registerBtn.addEventListener("click", async () => {
     status.textContent = "در حال ایجاد challenge... ⏳";
 
-    // مرحله 1: دریافت challenge
-    const optsResp = await fetch("{% url 'user:register-option' %}", { method: "POST" });
+    // مرحله 1: دریافت challenge و ارسال CAPTCHA
+    const captchaToken = document.getElementById("captchaInput")?.value || "";
+    const optsResp = await fetch("{% url 'user:register-option' %}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({captcha: captchaToken})
+    });
+
     const opts = await optsResp.json();
+    if (opts.error) {
+        status.textContent = "خطا: " + opts.error;
+        return;
+    }
 
     // مرحله 2: تبدیل challenge به ArrayBuffer
-    opts.user.id = Uint8Array.from(atob(opts.user.id), c => c.charCodeAt(0));
-    opts.challenge = Uint8Array.from(atob(opts.challenge), c => c.charCodeAt(0));
+    opts.user.id = base64UrlToUint8Array(opts.user.id);
+    opts.challenge = base64UrlToUint8Array(opts.challenge);
 
-    // مراحل WebAuthn API
+    if (opts.allowCredentials) {
+        opts.allowCredentials = opts.allowCredentials.map(c => ({
+            ...c,
+            id: base64UrlToUint8Array(c.id)
+        }));
+    }
+
+    // مرحله 3: WebAuthn API
     let credential;
     try {
         credential = await navigator.credentials.create({ publicKey: opts });
@@ -281,19 +317,19 @@ registerBtn.addEventListener("click", async () => {
         return;
     }
 
-    // مرحله 3: آماده کردن داده برای سرور
+    // مرحله 4: آماده کردن داده برای سرور
     const credData = {
-        user_id: opts.user.name, // یا opts.user.id/base64 string
+        user_id: opts.user.name,
         id: credential.id,
-        rawId: arrayBufferToBase64(credential.rawId),
+        rawId: arrayBufferToBase64Url(credential.rawId),
         type: credential.type,
         response: {
-            clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
-            attestationObject: arrayBufferToBase64(credential.response.attestationObject)
+            clientDataJSON: arrayBufferToBase64Url(credential.response.clientDataJSON),
+            attestationObject: arrayBufferToBase64Url(credential.response.attestationObject)
         }
     };
 
-    // مرحله 4: ارسال به سرور
+    // مرحله 5: ارسال داده‌ها به سرور
     const verifyResp = await fetch("{% url 'user:register-verify' %}", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -301,20 +337,23 @@ registerBtn.addEventListener("click", async () => {
     });
 
     const result = await verifyResp.json();
-    if (result.status === "ok") {
-        status.textContent = "ثبت نام موفق ✅ Username: " + result.user;
+
+    if (result.success) {
+        status.textContent = "ثبت نام موفق ✅";
+
+        // ذخیره اطلاعات مهم در sessionStorage
+        sessionStorage.setItem("auth_token", result.auth_token);
+        sessionStorage.setItem("device_info", JSON.stringify(result.device_info));
+
+        // ریدایرکت بعد از چند ثانیه
+        setTimeout(() => {
+            window.location.href = "{% url 'user:register-view' %}";
+        }, 1500);
+
     } else {
-        status.textContent = "ثبت نام ناموفق ❌";
+        status.textContent = "ثبت نام ناموفق ❌: " + (result.error || "خطای نامعلوم");
     }
 });
-
-// توابع کمکی
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary);
-}
 </script>
 
 </body>

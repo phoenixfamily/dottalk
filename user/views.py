@@ -2,11 +2,13 @@ import json
 import base64
 import secrets
 from dataclasses import asdict
+from datetime import timedelta
+
 from django.conf import settings
-import requests
 import random
 
 from django.contrib.auth import login
+from django.utils import timezone
 from django_user_agents.utils import get_user_agent
 from django.shortcuts import render
 from django.contrib.auth.models import User
@@ -21,12 +23,15 @@ from webauthn.helpers.structs import RegistrationCredential, AuthenticatorAttest
 
 from DotTalk import settings
 from user.models import User, UserDeviceInfo, DeviceAccessToken
+from .decorators import require_auth_token
 from .models import WebAuthnCredential
 from .webauthn_utils import (
     generate_registration_challenge,
     generate_authentication_challenge,
     verify_authentication_response_data,
 )
+
+DEVICE_TOKEN_EXPIRY_DAYS = 30  # مدت اعتبار ورود بدون auth_token
 
 
 @api_view(["GET"])
@@ -43,7 +48,6 @@ def custom_captcha(request):
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_register_options(request):
-
     captcha_response = request.data.get("captcha")
     if not captcha_response or captcha_response != request.session.get("captcha_answer"):
         return Response({"error": "Captcha not valid"}, status=400)
@@ -75,7 +79,6 @@ def webauthn_register_options(request):
     return Response(opts_json_ready)
 
 
-
 def verify_captcha(request, user_answer: str) -> bool:
     correct = request.session.get("captcha_answer")
     if not correct:
@@ -97,6 +100,7 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR', 'Unknown')
     return ip
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -135,28 +139,30 @@ def webauthn_register_verify(request):
             expected_origin=settings.WEBAUTHN_ORIGIN,
             expected_rp_id=settings.WEBAUTHN_RP_ID,
         )
-        WebAuthnCredential.objects.create(
-            user=user,
-            credential_id=verification.credential_id,
-            public_key=verification.credential_public_key,
-            sign_count=verification.sign_count,
-        )
 
         device_info = UserDeviceInfo.objects.create(
             user=user,
-            device_type = 'Mobile' if user_agent.is_mobile else 'Tablet' if user_agent.is_tablet else 'Desktop' if user_agent.is_pc else 'Unknown',
-            device_model = user_agent.device.family,
-            browser= user_agent.browser.family,
+            device_type='Mobile' if user_agent.is_mobile else 'Tablet' if user_agent.is_tablet else 'Desktop' if user_agent.is_pc else 'Unknown',
+            device_model=user_agent.device.family,
+            browser=user_agent.browser.family,
             operating_system=user_agent.os.family,
-            os_version =  user_agent.os.version_string,
-            ip_address = ip_address
+            os_version=user_agent.os.version_string,
+            ip_address=ip_address
+        )
+
+        WebAuthnCredential.objects.create(
+            user=user,
+            device=device_info,
+            credential_id=verification.credential_id,
+            public_key=verification.credential_public_key,
+            sign_count=verification.sign_count,
         )
 
         device_token = DeviceAccessToken.objects.create(
             user=user,
             device=device_info,
             token=secrets.token_urlsafe(32),
-            expires_at=None  # اگر خواستی تاریخ انقضا بذاری
+            expires_at=timezone.now() + timedelta(days=DEVICE_TOKEN_EXPIRY_DAYS)
         )
 
         return Response({
@@ -164,11 +170,11 @@ def webauthn_register_verify(request):
             "message": "اکانت شما با موفقیت ساخته شد",
             "auth_token": user.auth_token,  # یا token مربوط به device
             "device_info": {
-                'ip_address': device_info.ip_address,
-                'device_model': device_info.device_model,
-                "device_type": device_info.device_type,
-                "browser": device_info.browser,
-                "os": device_info.operating_system,
+                'ip_address': device_token.device.ip_address,
+                'device_model': device_token.device.device_model,
+                "device_type": device_token.device.device_type,
+                "browser": device_token.device.browser,
+                "os": device_token.device.operating_system,
             },
         })
 
@@ -176,48 +182,179 @@ def webauthn_register_verify(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# ---- ورود با Passkey ----
 
+# --- 1️⃣ ساخت Challenge با credential_id ---
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def webauthn_login_options(request):
-    """ارسال challenge برای ورود"""
-    username = request.data.get("username")
-    user = get_object_or_404(User, username=username)
-    creds = user.webauthn_credentials.all()
-    opts = generate_authentication_challenge(creds)
-    cache.set(f"auth_challenge_{user.id}", opts.challenge, timeout=600)
-    return Response(opts.model_dump_json())
+    """
+    ✅ ارسال challenge برای ورود بر اساس credential_id
+    """
+    credential_id = request.data.get("credential_id")
+    if not credential_id:
+        return Response({"error": "credential_id لازم است"}, status=400)
+
+    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id)
+    user = credential.user
+
+    device_token = DeviceAccessToken.objects.filter(
+        user=user,
+        device=credential.device
+    ).order_by("-created_at").first()
+
+    if not device_token or not device_token.is_valid():
+        return Response({
+            "error": "اعتبار دستگاه منقضی شده است",
+            "requires_token": True,
+            "message": "لطفاً با auth_token وارد شوید تا Passkey جدید ثبت شود."
+        }, status=401)
+
+    opts = generate_authentication_challenge([credential])
+    cache.set(f"auth_challenge_{credential_id}", opts.challenge, timeout=600)
+
+    # Base64URL encode for JS
+    def encode_bytes(obj):
+        if isinstance(obj, (bytes, bytearray)):
+            return base64.urlsafe_b64encode(obj).rstrip(b"=").decode("utf-8")
+        elif isinstance(obj, list):
+            return [encode_bytes(i) for i in obj]
+        elif isinstance(obj, dict):
+            return {k: encode_bytes(v) for k, v in obj.items()}
+        return obj
+
+    return Response(encode_bytes(asdict(opts)))
+
+
+# --- 2️⃣ بررسی پاسخ WebAuthn ---
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def webauthn_login_verify(request):
+    """
+    ✅ بررسی پاسخ WebAuthn و لاگین کاربر
+    ✅ صدور یا تأیید auth_token
+    ✅ ثبت زمان و IP
+    """
+    credential_id = request.data.get("id")
+    if not credential_id:
+        return Response({"error": "شناسه credential یافت نشد"}, status=400)
+
+    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id)
+    user = credential.user
+    challenge = cache.get(f"auth_challenge_{credential_id}")
+
+    if not challenge:
+        return Response({"error": "Challenge منقضی یا یافت نشد"}, status=400)
+
+    device_token = DeviceAccessToken.objects.filter(
+        user=user,
+        device=credential.device
+    ).order_by("-created_at").first()
+
+    if not device_token or not device_token.is_valid():
+        return Response({
+            "error": "اعتبار دستگاه منقضی شده است",
+            "requires_token": True,
+            "message": "لطفاً با auth_token وارد شوید تا Passkey جدید ثبت شود."
+        }, status=401)
+
+    try:
+        verification = verify_authentication_response_data(
+            json.dumps(request.data), challenge, credential
+        )
+
+        # به‌روزرسانی شمارنده امنیتی
+        credential.sign_count = verification.new_sign_count
+        credential.save()
+
+        # اگر لاگین نیست، لاگینش کن
+        if not request.user.is_authenticated:
+            login(request, user)
+
+        # ثبت زمان و IP
+        user.last_login_at = timezone.now()
+        user.last_ip = get_client_ip(request)
+        user.save(update_fields=["last_login_at", "last_ip"])
+
+        device_token.expires_at = timezone.now() + timedelta(days=DEVICE_TOKEN_EXPIRY_DAYS)
+        device_token.save(update_fields=["expires_at"])
+
+        return Response({
+            "status": "authenticated",
+            "message": "ورود موفقیت‌آمیز بود ✅",
+            "username": user.username,
+            "auth_token": user.auth_token,
+            "last_login_at": user.last_login_at,
+            "ip": user.last_ip,
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def webauthn_login_verify(request):
-    """بررسی پاسخ ورود"""
-    username = request.data.get("username")
-    data = json.dumps(request.data)
-    user = get_object_or_404(User, username=username)
-    challenge = cache.get(f"auth_challenge_{user.id}")
+def token_login(request):
+    """
+    ✅ ورود با auth_token زمانی که Passkey معتبر نیست
+    ✅ صدور یا تمدید Device Token خودکار
+    """
+    token = request.data.get("auth_token")
+    if not token:
+        return Response({"error": "توکن ارسالی وجود ندارد"}, status=400)
 
-    cred_id = request.data.get("id")
-    credential = get_object_or_404(WebAuthnCredential, user=user, credential_id=cred_id)
+    try:
+        user = User.objects.get(auth_token=token, is_active=True)
+    except User.DoesNotExist:
+        return Response({"error": "توکن نامعتبر است"}, status=400)
 
-    verification = verify_authentication_response_data(data, challenge, credential)
+    login(request, user)
+    user.last_login_at = timezone.now()
+    user.last_ip = get_client_ip(request)
+    user.save(update_fields=["last_login_at", "last_ip"])
 
-    credential.sign_count = verification.new_sign_count
-    credential.save()
+    # 🔄 Device Token خودکار برای دستگاه جدید یا موجود
+    user_agent = get_user_agent(request)
+    device_info, _ = UserDeviceInfo.objects.get_or_create(
+        user=user,
+        device_type='Mobile' if user_agent.is_mobile else 'Tablet' if user_agent.is_tablet else 'Desktop' if user_agent.is_pc else 'Unknown',
+        device_model=user_agent.device.family,
+        browser=user_agent.browser.family,
+        operating_system=user_agent.os.family,
+        defaults={"ip_address": user.last_ip}
+    )
 
-    # اینجا session یا JWT صادر کن
-    return Response({"status": "authenticated", "user": user.username})
+    device_token, created = DeviceAccessToken.objects.get_or_create(
+        user=user,
+        device=device_info,
+        defaults={"token": secrets.token_urlsafe(32),
+                  "expires_at": timezone.now() + timedelta(days=DEVICE_TOKEN_EXPIRY_DAYS)}
+    )
+
+    # اگر Token قبلاً بود، تمدیدش کن
+    if not created:
+        device_token.expires_at = timezone.now() + timedelta(days=DEVICE_TOKEN_EXPIRY_DAYS)
+        device_token.save(update_fields=["expires_at"])
+
+    return Response({
+        "success": True,
+        "message": "ورود با توکن موفقیت‌آمیز بود ✅",
+        "username": user.username,
+        "auth_token": user.auth_token,
+        "device_token": device_token.token,
+        "device_token_expires_at": device_token.expires_at,
+        "can_register_new_device": True
+    })
 
 
 
+@require_auth_token
 def dashboard_view(request):
     return render(request, 'dashboard.html')
 
 
 def register_view(request):
     return render(request, 'register.html')
+
 
 def login_view(request):
     return render(request, 'login.html')

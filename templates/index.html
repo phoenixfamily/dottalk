@@ -531,6 +531,8 @@ function base64UrlToUint8Array(base64UrlString) {
                     "X-CSRFToken": getCookie('csrftoken')
                 },
                 body: JSON.stringify(credData)
+                credentials: "include"   // ← خیلی مهم
+
             });
 
             const result = await verifyResp.json();

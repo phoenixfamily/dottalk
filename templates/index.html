@@ -304,10 +304,10 @@
             if (!optsResp.ok) throw new Error(opts.error || "خطا در سرور");
 
             // base64url به بایت
+            opts.challenge = base64UrlToUint8Array(opts.challenge);
 
             if (opts.allowCredentials) {
 
-                opts.challenge = base64UrlToUint8Array(opts.challenge);
                 opts.allowCredentials = opts.allowCredentials.map(c => ({
                     ...c,
                     id: base64UrlToUint8Array(c.id)

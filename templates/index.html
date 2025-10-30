@@ -445,7 +445,8 @@ function base64UrlToUint8Array(base64UrlString) {
                     "X-CSRFToken": getCookie('csrftoken')
 
                 },
-                body: JSON.stringify({captcha: captchaValue})
+                body: JSON.stringify({captcha: captchaValue}),
+                credentials: "include"
             });
 
             console.log("📨 Response status:", optsResp.status);

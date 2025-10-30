@@ -62,7 +62,7 @@ def webauthn_register_options(request):
     temp_token['webauthn'] = True  # optional flag
 
     opts = generate_registration_challenge(user)
-    cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
+    cache.set(f"register_challenge_{str(temp_token)}", opts.challenge, timeout=600)
 
     opts_dict = asdict(opts)
 
@@ -125,7 +125,7 @@ def webauthn_register_verify(request):
         return Response({"error": str(e)}, status=400)
 
 
-    challenge = cache.get(f"register_challenge_{user.id}")
+    challenge = cache.get(f"register_challenge_{temp_token_str}")
     if not challenge:
         return Response({"error": "Challenge expired or not found"}, status=400)
 

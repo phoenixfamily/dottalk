@@ -291,8 +291,10 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken'),
+
                 },
-                body: JSON.stringify({ credential_id }),
+                body: JSON.stringify({credential_id: credential_id}),
                 credentials: "include"
 
             });
@@ -347,7 +349,7 @@
                 sessionStorage.setItem("auth_token", result.token);
                 sessionStorage.setItem("device_info", JSON.stringify(result.device_info));
 
-                  setTimeout(() => {
+                setTimeout(() => {
                     window.location.href = "{% url 'user:dashboard-view' %}";
                 }, 1500);
 

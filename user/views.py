@@ -1,4 +1,3 @@
-import ast
 import json
 import base64
 import secrets
@@ -163,10 +162,12 @@ def webauthn_register_verify(request):
             ip_address=ip_address
         )
 
+        credential_id_b64 = base64.urlsafe_b64encode(credential.raw_id).rstrip(b'=').decode('utf-8')
+
         WebAuthnCredential.objects.create(
             user=user,
             device=device_info,
-            credential_id=verification.credential_id,
+            credential_id=credential_id_b64,
             public_key=verification.credential_public_key,
             sign_count=verification.sign_count,
         )
@@ -207,9 +208,8 @@ def webauthn_login_options(request):
     if not credential_id:
         return Response({"error": "credential_id لازم است"}, status=400)
 
-    credential_id_bytes = ast.literal_eval(credential_id)  # یا decode از base64، بسته به ذخیره‌سازی
 
-    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id_bytes)
+    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id)
     user = credential.user
 
     device_token = DeviceAccessToken.objects.filter(

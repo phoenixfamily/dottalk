@@ -336,9 +336,8 @@
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": getCookie('csrftoken'),
-                    credentials: "include"
-
                 },
+                credentials: "include",
                 body: JSON.stringify(authData)
             });
 

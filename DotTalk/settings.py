@@ -40,9 +40,9 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
-DOMAIN = 'dottalk.ir/'
+DOMAIN = 'dottalk.ir'
 SITE_NAME = 'DotTalk'
-SITE_URL = "https://www.dottalk.ir/"
+SITE_URL = "https://www.dottalk.ir"
 
 SITE_ID = 1
 
@@ -50,6 +50,15 @@ META_SITE_PROTOCOL = "https"
 META_USE_OG_PROPERTIES = True
 META_USE_TWITTER_PROPERTIES = True
 META_USE_SCHEMAORG_PROPERTIES = True
+
+SESSION_COOKIE_DOMAIN = ".dottalk.ir"
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "None"
+
+CSRF_COOKIE_DOMAIN = ".dottalk.ir"
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+
 
 CSRF_TRUSTED_ORIGINS = ["https://dottalk.ir", "https://www.dottalk.ir"]
 

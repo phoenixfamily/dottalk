@@ -283,13 +283,18 @@
         status.textContent = "در حال دریافت challenge... ⏳";
 
         try {
+
+            const credential_id = localStorage.getItem("credential_id");
+
             // مرحله ۱: درخواست challenge از سرور
             const optsResp = await fetch("{% url 'user:login-option' %}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    credentials: "include"
                 },
+                body: JSON.stringify({ credential_id }),
+                credentials: "include"
+
             });
 
             const opts = await optsResp.json();
@@ -516,7 +521,8 @@
                 return;
             }
 
-            console.log("✅ Credential created:", credential);
+            localStorage.setItem("credential_id", credential.id);
+
 
             // 4️⃣ آماده‌سازی داده برای ارسال
             const credData = {

@@ -19,13 +19,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import AccessToken
 from webauthn import verify_registration_response
 from webauthn.helpers.structs import RegistrationCredential, AuthenticatorAttestationResponse
 
 from DotTalk import settings
 from user.models import User, UserDeviceInfo, DeviceAccessToken
-from .decorators import require_auth_token
 from .models import WebAuthnCredential
 from .webauthn_utils import (
     generate_registration_challenge,
@@ -121,8 +121,8 @@ def webauthn_register_verify(request):
     try:
         validated_token = JWTAuthentication().get_validated_token(temp_token_str)
         user = JWTAuthentication().get_user(validated_token)
-    except Exception:
-        return Response({"error": "Invalid token"}, status=400)
+    except (TokenError, InvalidToken) as e:
+        return Response({"error": str(e)}, status=400)
 
 
     challenge = cache.get(f"register_challenge_{user.id}")

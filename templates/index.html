@@ -275,102 +275,100 @@
 
 
 <script>
-   const loginBtn = document.getElementById("loginBtn");
-const status = document.getElementById("status");
+    const loginBtn = document.getElementById("loginBtn");
+    const status = document.getElementById("status");
 
-loginBtn.addEventListener("click", async () => {
-    const username = document.getElementById("username").value.trim();
-    if (!username) {
-        status.textContent = "نام کاربری الزامی است 😐";
-        return;
+    loginBtn.addEventListener("click", async () => {
+
+        status.textContent = "در حال دریافت challenge... ⏳";
+
+        try {
+            // مرحله ۱: درخواست challenge از سرور
+            const optsResp = await fetch("{% url 'user:login-option' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    credentials: "include"
+                },
+            });
+
+            const opts = await optsResp.json();
+            if (!optsResp.ok) throw new Error(opts.error || "خطا در سرور");
+
+            // base64url به بایت
+
+            if (opts.allowCredentials) {
+
+                opts.challenge = base64UrlToUint8Array(opts.challenge);
+                opts.allowCredentials = opts.allowCredentials.map(c => ({
+                    ...c,
+                    id: base64UrlToUint8Array(c.id)
+                }));
+
+            }
+
+            // مرحله ۲: WebAuthn → دریافت assertion
+            const assertion = await navigator.credentials.get({publicKey: opts});
+
+            // مرحله ۳: آماده‌سازی داده برای ارسال به سرور
+            const authData = {
+                id: assertion.id,
+                rawId: arrayBufferToBase64Url(assertion.rawId),
+                type: assertion.type,
+                response: {
+                    clientDataJSON: arrayBufferToBase64Url(assertion.response.clientDataJSON),
+                    authenticatorData: arrayBufferToBase64Url(assertion.response.authenticatorData),
+                    signature: arrayBufferToBase64Url(assertion.response.signature),
+                    userHandle: assertion.response.userHandle
+                        ? arrayBufferToBase64Url(assertion.response.userHandle)
+                        : null
+                },
+            };
+
+            // مرحله ۴: ارسال برای بررسی
+            const verifyResp = await fetch("{% url 'user:login-verify' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken'),
+                    credentials: "include"
+
+                },
+                body: JSON.stringify(authData)
+            });
+
+            const result = await verifyResp.json();
+            if (verifyResp.ok && result.token) {
+                status.textContent = "ورود موفق ✅ خوش آمدی، " + result.username;
+                sessionStorage.setItem("auth_token", result.token);
+                sessionStorage.setItem("device_info", JSON.stringify(result.device_info));
+
+            } else {
+                status.textContent = "ورود ناموفق ❌ " + (result.error || "");
+            }
+        } catch (err) {
+            console.error(err);
+            status.textContent = "خطا در ورود: " + err.message;
+        }
+    });
+
+    // Base64URL Helpers
+    function arrayBufferToBase64Url(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        for (let b of bytes) binary += String.fromCharCode(b);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
-    status.textContent = "در حال دریافت challenge... ⏳";
-
-    try {
-        // مرحله ۱: درخواست challenge از سرور
-        const optsResp = await fetch("{% url 'user:login-option' %}", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({username})
-        });
-
-        const opts = await optsResp.json();
-        if (!optsResp.ok) throw new Error(opts.error || "خطا در سرور");
-
-        // base64url به بایت
-
-        if (opts.allowCredentials) {
-
-        opts.challenge = base64UrlToUint8Array(opts.challenge);
-        opts.allowCredentials = opts.allowCredentials.map(c => ({
-            ...c,
-            id: base64UrlToUint8Array(c.id)
-        }));
-
-        }
-
-        // مرحله ۲: WebAuthn → دریافت assertion
-        const assertion = await navigator.credentials.get({publicKey: opts});
-
-        // مرحله ۳: آماده‌سازی داده برای ارسال به سرور
-        const authData = {
-            id: assertion.id,
-            rawId: arrayBufferToBase64Url(assertion.rawId),
-            type: assertion.type,
-            response: {
-                clientDataJSON: arrayBufferToBase64Url(assertion.response.clientDataJSON),
-                authenticatorData: arrayBufferToBase64Url(assertion.response.authenticatorData),
-                signature: arrayBufferToBase64Url(assertion.response.signature),
-                userHandle: assertion.response.userHandle
-                    ? arrayBufferToBase64Url(assertion.response.userHandle)
-                    : null
-            },
-            username
-        };
-
-        // مرحله ۴: ارسال برای بررسی
-        const verifyResp = await fetch("{% url 'user:login-verify' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie('csrftoken')
-},
-            body: JSON.stringify(authData)
-        });
-
-        const result = await verifyResp.json();
-        if (verifyResp.ok && result.token) {
-            status.textContent = "ورود موفق ✅ خوش آمدی، " + result.username;
-            sessionStorage.setItem("auth_token", result.token);
-            sessionStorage.setItem("device_info", JSON.stringify(result.device_info));
-
-        } else {
-            status.textContent = "ورود ناموفق ❌ " + (result.error || "");
-        }
-    } catch (err) {
-        console.error(err);
-        status.textContent = "خطا در ورود: " + err.message;
+    function base64UrlToUint8Array(base64UrlString) {
+        let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/');
+        const padding = '='.repeat((4 - base64.length % 4) % 4);
+        base64 += padding;
+        const raw = atob(base64);
+        const array = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) array[i] = raw.charCodeAt(i);
+        return array;
     }
-});
-
-// Base64URL Helpers
-function arrayBufferToBase64Url(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    for (let b of bytes) binary += String.fromCharCode(b);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-function base64UrlToUint8Array(base64UrlString) {
-    let base64 = base64UrlString.replace(/-/g, '+').replace(/_/g, '/');
-    const padding = '='.repeat((4 - base64.length % 4) % 4);
-    base64 += padding;
-    const raw = atob(base64);
-    const array = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) array[i] = raw.charCodeAt(i);
-    return array;
-}
 
 </script>
 

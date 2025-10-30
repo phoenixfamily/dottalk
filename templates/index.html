@@ -451,8 +451,11 @@ function base64UrlToUint8Array(base64UrlString) {
             });
 
             console.log("📨 Response status:", optsResp.status);
-            const opts = await optsResp.json();
+            const optsResult = await optsResp.json();
+            const opts = optsResult.webauthn_options
             console.log("📦 Response JSON:", opts);
+            const tempToken = optsResult.temp_token;  // این رو برای verify می‌فرستی
+
 
             if (!optsResp.ok) {
                 status.textContent = "خطا در سرور: " + (opts.error || opts.detail || "نامشخص");
@@ -515,6 +518,7 @@ function base64UrlToUint8Array(base64UrlString) {
 
             // 4️⃣ آماده‌سازی داده برای ارسال
             const credData = {
+                temp_token: tempToken,
                 user_id: opts.user.name,
                 id: credential.id,
                 rawId: arrayBufferToBase64Url(credential.rawId),

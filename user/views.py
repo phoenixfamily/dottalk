@@ -18,6 +18,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import AccessToken
 from webauthn import verify_registration_response
 from webauthn.helpers.structs import RegistrationCredential, AuthenticatorAttestationResponse
 
@@ -52,12 +54,12 @@ def webauthn_register_options(request):
     if not captcha_response or captcha_response != request.session.get("captcha_answer"):
         return Response({"error": "Captcha not valid"}, status=400)
 
-    # ایجاد یا استفاده از کاربر
-    if request.user.is_authenticated:
-        user = request.user
-    else:
-        user = User.objects.create_user(username=f"dt-{secrets.token_urlsafe(6)}")
-        login(request, user)  # ← کاربر وارد session شد
+    # ایجاد کاربر موقت
+    user = User.objects.create_user(username=f"dt-{secrets.token_urlsafe(6)}")
+
+    # ایجاد JWT موقت برای verify
+    temp_token = AccessToken.for_user(user)
+    temp_token['webauthn'] = True  # optional flag
 
     opts = generate_registration_challenge(user)
     cache.set(f"register_challenge_{user.id}", opts.challenge, timeout=600)
@@ -76,7 +78,10 @@ def webauthn_register_options(request):
 
     opts_json_ready = encode_bytes(opts_dict)
 
-    return Response(opts_json_ready)
+    return Response({
+        "webauthn_options": opts_json_ready,
+        "temp_token": str(temp_token),
+    })
 
 
 def verify_captcha(request, user_answer: str) -> bool:
@@ -108,10 +113,17 @@ def webauthn_register_verify(request):
     user_agent = get_user_agent(request)
     ip_address = get_client_ip(request)
 
-    """Verify WebAuthn registration"""
-    user = request.user
-    if not user.is_authenticated:
-        return Response({"error": "User not authenticated"}, status=400)
+    # دریافت JWT از body
+    temp_token_str = request.data.get("temp_token")
+    if not temp_token_str:
+        return Response({"error": "Missing temporary token"}, status=400)
+
+    try:
+        validated_token = JWTAuthentication().get_validated_token(temp_token_str)
+        user = JWTAuthentication().get_user(validated_token)
+    except Exception:
+        return Response({"error": "Invalid token"}, status=400)
+
 
     challenge = cache.get(f"register_challenge_{user.id}")
     if not challenge:

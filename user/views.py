@@ -1,3 +1,4 @@
+import ast
 import json
 import base64
 import secrets
@@ -206,7 +207,9 @@ def webauthn_login_options(request):
     if not credential_id:
         return Response({"error": "credential_id لازم است"}, status=400)
 
-    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id)
+    credential_id_bytes = ast.literal_eval(credential_id)  # یا decode از base64، بسته به ذخیره‌سازی
+
+    credential = get_object_or_404(WebAuthnCredential, credential_id=credential_id_bytes)
     user = credential.user
 
     device_token = DeviceAccessToken.objects.filter(

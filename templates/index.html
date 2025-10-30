@@ -285,6 +285,7 @@
         try {
 
             const credential_id = localStorage.getItem("credential_id");
+            console.log(credential_id)
 
             // مرحله ۱: درخواست challenge از سرور
             const optsResp = await fetch("{% url 'user:login-option' %}", {

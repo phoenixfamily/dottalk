@@ -359,7 +359,6 @@ def token_login(request):
 
 
 
-@require_auth_token
 def dashboard_view(request):
     return render(request, 'dashboard.html')
 

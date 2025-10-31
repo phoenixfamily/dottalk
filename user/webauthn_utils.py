@@ -10,7 +10,7 @@ from webauthn.helpers.structs import (
     AuthenticationCredential,
     AttestationConveyancePreference,
     PublicKeyCredentialDescriptor,
-    PublicKeyCredentialType,
+    PublicKeyCredentialType, AuthenticatorAssertionResponse,
 )
 
 def generate_registration_challenge(user):
@@ -66,9 +66,35 @@ def generate_authentication_challenge(credentials):
     )
 
 
+from base64 import urlsafe_b64decode
+
+def base64url_to_bytes(val):
+    # تبدیل base64url به bytes
+    val += '=' * (4 - len(val) % 4)  # padding
+    return urlsafe_b64decode(val.encode('utf-8'))
+
 def verify_authentication_response_data(data, expected_challenge, credential):
     """اعتبارسنجی پاسخ ورود"""
-    auth_credential = AuthenticationCredential(**data)
+
+    # تبدیل rawId به bytes
+    raw_id_bytes = base64url_to_bytes(data["rawId"])
+
+    # تبدیل کل clientData و authenticatorData به bytes
+    response = AuthenticatorAssertionResponse(
+        client_data_json=base64url_to_bytes(data["response"]["clientDataJSON"]),
+        authenticator_data=base64url_to_bytes(data["response"]["authenticatorData"]),
+        signature=base64url_to_bytes(data["response"]["signature"]),
+        user_handle=base64url_to_bytes(data["response"]["userHandle"]) if data["response"].get("userHandle") else None
+    )
+
+    # ساخت AuthenticationCredential با کلیدهای درست
+    auth_credential = AuthenticationCredential(
+        id=data["id"],
+        raw_id=raw_id_bytes,
+        response=response,
+        type=data["type"],
+    )
+
     verification = verify_authentication_response(
         credential=auth_credential,
         expected_challenge=expected_challenge,
@@ -77,4 +103,5 @@ def verify_authentication_response_data(data, expected_challenge, credential):
         credential_public_key=credential.public_key,
         credential_current_sign_count=credential.sign_count,
     )
+
     return verification

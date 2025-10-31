@@ -274,7 +274,7 @@ def webauthn_login_verify(request):
 
     try:
         verification = verify_authentication_response_data(
-            json.dumps(request.data), challenge, credential
+            request.data, challenge, credential
         )
 
         # به‌روزرسانی شمارنده امنیتی
